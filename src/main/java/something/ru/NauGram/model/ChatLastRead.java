@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 public class ChatLastRead {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("chatId")
@@ -29,7 +29,7 @@ public class ChatLastRead {
         lastReadAt = LocalDateTime.now();
     }
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
