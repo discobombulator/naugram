@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
+/**
+ * <p>Сущность, хранящая связь между пользователем и определённым чатом.</p>
+ */
 @Entity
 public class ChatParticipant {
     @Id
@@ -18,10 +21,12 @@ public class ChatParticipant {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Column(nullable = false)
     private LocalDateTime joinedAt;
     private LocalDateTime leftAt;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private ParticipantRole role;
 
     public Chat getChat() {

@@ -4,6 +4,11 @@ import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
+/**
+ * Сущность, хранящая информацию о том,
+ * какой пользователь в каком чате прочитал
+ * последнее сообщение и когда это произошло.
+ */
 @Entity
 public class ChatLastRead {
     @Id

@@ -6,6 +6,12 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Сущность пользователя системы.
+ *
+ * <p>Представляет зарегистрированного пользователя, включая его основные
+ * персональные данные, настройки профиля и роль в системе.</p>
+ */
 @Entity
 @Table(name = "users")
 public class User {
