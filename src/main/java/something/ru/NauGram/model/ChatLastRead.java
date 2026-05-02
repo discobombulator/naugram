@@ -16,12 +16,10 @@ public class ChatLastRead {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId("chatId")
     @JoinColumn(name = "chat_id")
     private Chat chat;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId("userId")
     @JoinColumn(name = "user_id")
     private User user;
 
