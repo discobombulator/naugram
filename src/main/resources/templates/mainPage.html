@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>NauGram - Чаты</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f7f9fb;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 350px;
+            background: white;
+            border-right: 2px solid #f5833d33;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .header-top {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .settings-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #f5833d;
+            font-size: 24px;
+            padding: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+
+        .settings-btn:hover {
+            transform: rotate(45deg);
+        }
+
+        .search-wrapper {
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            height: 45px;
+            background: #f1f1f1;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 0 15px;
+            box-sizing: border-box;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .search-input:focus {
+            border-color: #f5833d;
+            background: white;
+        }
+
+        /* Список чатов */
+        .chats-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .chat-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            cursor: pointer;
+            transition: 0.2s;
+            border-bottom: 1px solid #f9f9f9;
+        }
+
+        .chat-item:hover {
+            background-color: #fff4ed;
+        }
+
+        .chat-avatar {
+            width: 55px;
+            height: 55px;
+            background-color: #f5833d;
+            border-radius: 50%;
+            margin-right: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .chat-info {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .chat-name {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 4px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .chat-time {
+            font-size: 12px;
+            color: #999;
+            font-weight: normal;
+        }
+
+        .chat-last-msg {
+            font-size: 14px;
+            color: #777;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f7f9fb;
+            position: relative;
+        }
+
+        .welcome-msg {
+            text-align: center;
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border: 1px solid #f5833d33;
+        }
+
+        .welcome-msg h2 {
+            color: #f5833d;
+            margin-top: 0;
+        }
+
+        /* Скроллбар в оранжевом стиле */
+        .chats-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        .chats-list::-webkit-scrollbar-thumb {
+            background: #f5833d55;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="sidebar-header">
+        <div class="header-top">
+            <a href="/settings" class="settings-btn" title="Настройки">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            </a>
+            <div style="color: #f5833d; font-weight: bold; font-size: 20px;">NauGram</div>
+        </div>
+        <div class="search-wrapper">
+            <input type="text" class="search-input" placeholder="Поиск чатов...">
+        </div>
+    </div>
+
+    <div class="chats-list">
+        <div class="chat-item">
+            <div class="chat-avatar">И</div>
+            <div class="chat-info">
+                <div class="chat-name">Иван Куштанов <span class="chat-time">14:20</span></div>
+                <div class="chat-last-msg">Привет! Как там проект?</div>
+            </div>
+        </div>
+
+        <div class="chat-item">
+            <div class="chat-avatar" style="background-color: #5dacee;">Л</div>
+            <div class="chat-info">
+                <div class="chat-name">Леонид Додепович<span class="chat-time">12:05</span></div>
+                <div class="chat-last-msg">Завтра на вайп залетаем</div>
+            </div>
+        </div>
+        </div>
+    </div>
+</div>
+
+<div class="main-content">
+    <div class="welcome-msg">
+        <div style="font-size: 50px; margin-bottom: 15px;">👋</div>
+        <h2>Добро пожаловать в NauGram</h2>
+        <p style="color: #777;">Выберите чат, чтобы начать общение</p>
+    </div>
+</div>
+
+</body>
+</html>
