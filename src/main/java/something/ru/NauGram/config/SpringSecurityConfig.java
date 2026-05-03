@@ -8,8 +8,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import something.ru.NauGram.model.User;
-import something.ru.NauGram.services.UserService;
-import something.ru.NauGram.services.VerificationTokenService;
+import something.ru.NauGram.service.UserService;
+import something.ru.NauGram.service.VerificationTokenService;
 
 @Configuration
 @EnableWebSecurity

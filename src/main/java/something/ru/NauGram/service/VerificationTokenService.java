@@ -1,4 +1,4 @@
-package something.ru.NauGram.services;
+package something.ru.NauGram.service;
 
 
 import jakarta.mail.MessagingException;
@@ -8,8 +8,8 @@ import org.springframework.transaction.annotation.Transactional;
 import something.ru.NauGram.model.User;
 import something.ru.NauGram.model.VerificationToken;
 import something.ru.NauGram.repository.VerificationTokenRepository;
-import something.ru.NauGram.TokenSender;
 
+import java.util.Calendar;
 import java.util.Date;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -22,13 +22,22 @@ public class VerificationTokenService {
     private final VerificationTokenRepository verificationTokenRepository;
     private final TokenSender tokenSender;
 
+
+    public Date calculateExpiryDate(int expiryTimeInMinutes) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(new Date());
+        cal.add(Calendar.MINUTE, expiryTimeInMinutes);
+        return cal.getTime();
+    }
+
     /**
      * Конструктор сервиса.
      *
      * @param verificationTokenRepository репозиторий для работы с токенами в БД
      * @param tokenSender компонент для отправки кода на email
      */
-    public VerificationTokenService(VerificationTokenRepository verificationTokenRepository, TokenSender tokenSender) {
+    public VerificationTokenService(VerificationTokenRepository verificationTokenRepository,
+                                    TokenSender tokenSender) {
         this.verificationTokenRepository = verificationTokenRepository;
         this.tokenSender = tokenSender;
     }
@@ -40,7 +49,7 @@ public class VerificationTokenService {
      */
     @Transactional
     public void deleteOldToken(User user){
-        VerificationToken verificationToken = verificationTokenRepository.findByUserEmail(user.getEmail());
+        VerificationToken verificationToken = verificationTokenRepository.findByUser(user);
 
         if (verificationToken != null) {
             verificationTokenRepository.deleteVerificationTokenByUser(user);
@@ -59,9 +68,9 @@ public class VerificationTokenService {
     public void generateNewToken(User user) throws MessagingException {
         VerificationToken verificationToken = new VerificationToken();
 
-        String newToken = String.valueOf(ThreadLocalRandom.current().nextInt(100000, 999999 + 1));
+        String newToken = String.valueOf(ThreadLocalRandom.current().nextInt(100000, 1000000));
         verificationToken.setToken(newToken);
-        verificationToken.setExpiryDate(verificationToken.calculateExpiryDate(VerificationToken.EXPIRATION));
+        verificationToken.setExpiryDate(calculateExpiryDate(VerificationToken.EXPIRATION));
         verificationToken.setUser(user);
         verificationTokenRepository.save(verificationToken);
         tokenSender.sendToken(user,verificationToken);

@@ -1,4 +1,4 @@
-package something.ru.NauGram;
+package something.ru.NauGram.service;
 
 
 import jakarta.mail.*;
