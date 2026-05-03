@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ru" >
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NauGram - Вход</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f7f9fb;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .registration-container {
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        .logo {
+            width: 200px;
+            height: 200px;
+            background-image: url('/logo.png');
+            background-size: cover;
+            margin: 0 auto 20px;
+        }
+
+        .title {
+            color: #f5833d;
+            font-size: 28px;
+            margin-bottom: 40px;
+            font-weight: bold;
+        }
+
+        .input-group {
+            text-align: left;
+            margin-bottom: 25px;
+            width: 100%;
+        }
+
+        .input-group label {
+            display: block;
+            color: #f5833d;
+            font-size: 16px;
+            margin-bottom: 8px;
+            margin-left: 5px;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            height: 70px;
+            padding: 0 20px;
+            font-size: 18px;
+            border: 2px solid #f5833d;
+            border-radius: 15px;
+            outline: none;
+            box-sizing: border-box;
+            background: white;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 20px;
+            cursor: pointer;
+            color: #f5833d;
+            user-select: none;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            margin: 20px 0 30px 5px;
+            font-size: 16px;
+        }
+
+        .checkbox-container input {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            accent-color: #f5833d;
+        }
+
+        .button {
+            width: 100%;
+            height: 70px;
+            background-color: white;
+            color: #f5833d;
+            border: 2px solid #f5833d;
+            border-radius: 15px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .button:hover {
+            background-color: #f5833d;
+            color: white;
+        }
+
+        .login-link-container {
+            margin-top: 20px;
+        }
+
+        .resend-link {
+            color: #f5833d;
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .resend-link:disabled {
+            color: #ccc;
+            text-decoration: none;
+            cursor: default;
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .error {
+            background-color: #ff4d4d;
+            color: white;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="registration-container">
+    <div class="logo"></div>
+    <div class="title">Вход в NauGram</div>
+
+    <div th:if="${error}" class="notification error" id="notification">
+        <span th:text="${error}"></span>
+    </div>
+
+    <script>
+        const notification = document.getElementById("notification");
+        setTimeout(() => {
+            notification.style.display = "none";
+        }, 5000);
+    </script>
+
+    <form action="/login" method="POST">
+        <div class="input-group">
+            <label>Ваша электронная почта</label>
+            <div class="input-wrapper">
+                <input type="email" name="username" required>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>Ваш пароль</label>
+            <div class="input-wrapper">
+                <input type="password" id="password" name="password" required>
+                <span class="toggle-password" onclick="togglePass()">ПОКАЗАТЬ</span>
+            </div>
+        </div>
+
+        <div class="checkbox-container">
+            <input type="checkbox" id="remember-me" name="remember-me">
+            <label for="remember-me">Запомнить меня</label>
+        </div>
+
+        <button type="submit" class="button">Войти</button>
+
+        <div class="login-link-container">
+            <a href="/registration" class="resend-link">Нет аккаунта? Зарегистрироваться</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    function togglePass() {
+        const passInput = document.getElementById('password');
+        const toggleBtn = document.querySelector('.toggle-password');
+        if (passInput.type === "password") {
+            passInput.type = "text";
+            toggleBtn.textContent = "СКРЫТЬ";
+        } else {
+            passInput.type = "password";
+            toggleBtn.textContent = "ПОКАЗАТЬ";
+        }
+    }
+</script>
+
+</body>
+</html>
