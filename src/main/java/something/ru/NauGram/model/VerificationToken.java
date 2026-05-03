@@ -47,11 +47,4 @@ public class VerificationToken {
         this.expiryDate = expiryDate;
     }
 
-    public Date calculateExpiryDate(int expiryTimeInMinutes) {
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(new Date());
-        cal.add(Calendar.MINUTE, expiryTimeInMinutes);
-        return cal.getTime();
-    }
-
 }

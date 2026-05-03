@@ -1,17 +1,18 @@
-package something.ru.NauGram.services;
+package something.ru.NauGram.service;
 
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import something.ru.NauGram.model.User;
 import something.ru.NauGram.model.UserRole;
 import something.ru.NauGram.repository.UserRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Сервис для работы с пользователями.
@@ -52,7 +53,8 @@ public class UserService implements UserDetailsService {
 
         user.setRole(UserRole.USER);
 
-        user.setUsername(user.getEmail());
+        String email = user.getEmail();
+        user.setUsername(email.substring(0, email.indexOf("@")));
 
         userRepository.save(user);
     }
@@ -70,13 +72,14 @@ public class UserService implements UserDetailsService {
     /**
      * Загружает данные пользователя по email для Spring Security.
      *
-     * @param email email пользователя
+     * @param username username пользователя
      * @return объект {@link UserDetails} с данными пользователя
      * @throws UsernameNotFoundException если пользователь с таким email не найден
      */
     @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(email);
+    @NonNull
+    public UserDetails loadUserByUsername(@NonNull String username) throws UsernameNotFoundException {
+        User user = userRepository.findByEmail(username);
         if(user == null){
             throw new UsernameNotFoundException("User not found");
         }
@@ -94,5 +97,13 @@ public class UserService implements UserDetailsService {
      */
     public User findByEmail(String email){
         return userRepository.findByEmail(email);
+    }
+
+    public Optional<User> findById(Long id){
+        return userRepository.findById(id);
+    }
+
+    public User findByUsername(String username){
+        return userRepository.findByUsername(username);
     }
 }
