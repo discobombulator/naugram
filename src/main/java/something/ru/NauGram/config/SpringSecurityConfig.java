@@ -55,8 +55,9 @@ public class SpringSecurityConfig{
                         .successHandler((request, response, authentication) -> {
                             try {
                                 HttpSession session = request.getSession();
-                                session.setAttribute("pendingEmail", authentication.getName());
-                                User user = userService.findByEmail(authentication.getName());
+                                session.setAttribute("pendingName", authentication.getName());
+                                User user = userService.findByUsername(authentication.getName());
+                                verificationTokenService.deleteOldToken(user);
                                 verificationTokenService.generateNewToken(user);
                                 response.sendRedirect("/verify-login");
                             } catch (MessagingException e) {

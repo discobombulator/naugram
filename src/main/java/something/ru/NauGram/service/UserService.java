@@ -54,6 +54,7 @@ public class UserService implements UserDetailsService {
         user.setRole(UserRole.USER);
 
         String email = user.getEmail();
+        user.setEmail(email);
         user.setUsername(email.substring(0, email.indexOf("@")));
 
         userRepository.save(user);

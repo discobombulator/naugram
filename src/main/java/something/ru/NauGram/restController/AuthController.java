@@ -65,6 +65,7 @@ public class AuthController {
             userService.registerUser(user);
             verificationTokenService.generateNewToken(user);
             session.setAttribute("pendingEmail", user.getEmail());
+
             return "redirect:/verify-registration";
         } catch (Exception e) {
             model.addAttribute("message", "Пользователь уже существует");
@@ -101,6 +102,7 @@ public class AuthController {
     @ResponseBody
     public ResponseEntity<?> resendCode(HttpSession session, Model model) throws MessagingException {
         String email = (String) session.getAttribute("pendingEmail");
+
         User user = userService.findByEmail(email);
         if (email == null || email.isEmpty()) {
             return ResponseEntity.badRequest().body("Email not found in session");
@@ -148,11 +150,11 @@ public class AuthController {
                                      HttpSession session, Model model){
 
         String email = (String) session.getAttribute("pendingEmail");
-        String username = userService.findByEmail(email).getEmail();
-        User user = userService.findByUsername(username);
+        User user = userService.findByEmail(email);
+
         if (user == null) {
             model.addAttribute("error", "Сессия истекла. Пожалуйста, авторизуйтесь заново.");
-            return "redirect:/login";
+            return "redirect:/registration";
         }
         if (email == null || email.isEmpty()) {
             model.addAttribute("error", "Сессия истекла. Пожалуйста, зарегистрируйтесь заново.");
@@ -190,7 +192,8 @@ public class AuthController {
      */
     @GetMapping("/verify-login")
     public String showVerifyLoginPage(HttpSession session, Model model) {
-        Object email = session.getAttribute("pendingEmail");
+        String name = (String) session.getAttribute("pendingName");
+        String email = userService.findByUsername(name).getEmail();
 
         if (email == null) {
             model.addAttribute("error", "Сессия истекла. Пожалуйста, авторизуйтесь заново.");
@@ -215,15 +218,12 @@ public class AuthController {
     public String verifyLogin(@RequestParam("otp_code") String otpCode,
                               HttpSession session, Model model){
 
-        String email = (String) session.getAttribute("pendingEmail");
-        String username = userService.findByEmail(email).getEmail();
-        User user = userService.findByUsername(username);
+        String name = (String) session.getAttribute("pendingName");
+        User user = userService.findByUsername(name);
+
+        String email = user.getEmail();
 
         if (email == null || email.isEmpty()) {
-            model.addAttribute("error", "Сессия истекла. Пожалуйста, авторизуйтесь заново.");
-            return "redirect:/login";
-        }
-        if (user == null) {
             model.addAttribute("error", "Сессия истекла. Пожалуйста, авторизуйтесь заново.");
             return "redirect:/login";
         }
@@ -235,6 +235,7 @@ public class AuthController {
         if(otpCode.equals(trustToken) && trustDate.after(new Date()) && isConfirmed){
             userService.saveEnabled(email);
             session.removeAttribute("pendingEmail");
+            session.removeAttribute("pendingName");
             verificationTokenService.deleteOldToken(user);
             return "redirect:/";
         }
