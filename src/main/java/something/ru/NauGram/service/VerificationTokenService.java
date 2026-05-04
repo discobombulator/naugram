@@ -74,7 +74,6 @@ public class VerificationTokenService {
         verificationToken.setUser(user);
         verificationTokenRepository.save(verificationToken);
         tokenSender.sendToken(user,verificationToken);
-
     }
 
     /**
