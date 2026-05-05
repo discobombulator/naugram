@@ -1,8 +1,8 @@
+<!-- src/main/resources/templates/chat.html -->
 <!DOCTYPE html>
-<html lang="ru">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>NauGram - Чаты</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -166,47 +166,41 @@
     </style>
 </head>
 <body>
-
 <div class="sidebar">
-    <div class="sidebar-header">
-        <div class="header-top">
-            <a href="/settings" class="settings-btn" title="Настройки">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-            </a>
-            <div style="color: #f5833d; font-weight: bold; font-size: 20px;">NauGram</div>
-        </div>
-        <div class="search-wrapper">
-            <input type="text" class="search-input" placeholder="Поиск чатов...">
-        </div>
-    </div>
-
     <div class="chats-list">
-        <div class="chat-item">
-            <div class="chat-avatar">И</div>
+        <!-- Iterate over chats with onclick redirect -->
+        <div th:each="chat : ${chats}"
+             class="chat-item"
+             th:onclick="'window.location.href=\'/chats/' + ${chat.id} + '\''">
+            <div class="chat-avatar">
+                <!-- Show first letter of chat name or "?" if null -->
+                <span th:text="${chat.chatName != null ? #strings.substring(chat.chatName, 0, 1) : '?'}">?</span>
+            </div>
             <div class="chat-info">
-                <div class="chat-name">Иван Куштанов <span class="chat-time">14:20</span></div>
-                <div class="chat-last-msg">Привет! Как там проект?</div>
+                <div class="chat-name">
+                    <!-- Chat name with fallback -->
+                    <span th:text="${chat.chatName != null ? chat.chatName : 'Unnamed Chat'}">Chat Name</span>
+                </div>
+                <!-- Chat ID and type -->
+                <div class="chat-last-msg">
+                    ID: <span th:text="${chat.id}">1</span> | Type: <span th:text="${chat.chatType}">type</span>
+                </div>
             </div>
         </div>
 
-        <div class="chat-item">
-            <div class="chat-avatar" style="background-color: #5dacee;">Л</div>
-            <div class="chat-info">
-                <div class="chat-name">Леонид Додепович<span class="chat-time">12:05</span></div>
-                <div class="chat-last-msg">Завтра на вайп залетаем</div>
-            </div>
-        </div>
+        <!-- Show message when no chats -->
+        <div th:if="${#lists.isEmpty(chats)}" style="padding: 20px; text-align: center; color: #999;">
+            No chats available
         </div>
     </div>
 </div>
 
 <div class="main-content">
     <div class="welcome-msg">
-        <div style="font-size: 50px; margin-bottom: 15px;">👋</div>
-        <h2>Добро пожаловать в NauGram</h2>
-        <p style="color: #777;">Выберите чат, чтобы начать общение</p>
+        <h2>Welcome to NauGram</h2>
+        <p>Select a chat to start messaging</p>
+        <p>Total chats: <span th:text="${chatCount}">0</span></p>
     </div>
 </div>
-
 </body>
 </html>

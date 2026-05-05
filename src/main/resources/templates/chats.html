@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Page</title>
+</head>
+<body>
+<h1>Thymeleaf Test</h1>
+<p>Chat count: <span th:text="${chatCount}">0</span></p>
+
+<div th:if="${chats != null}">
+    <ul>
+        <li th:each="chat : ${chats}">
+            ID: <span th:text="${chat.id}"></span> -
+            Name: <span th:text="${chat.chatName}">No name</span>
+        </li>
+    </ul>
+</div>
+
+<!-- Debug info -->
+<div style="display:none;">
+    <pre th:text="${chats}"></pre>
+</div>
+</body>
+</html>

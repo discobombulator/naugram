@@ -48,28 +48,33 @@ public class SpringSecurityConfig{
 
                         .anyRequest().authenticated()
                 )
-
                 .formLogin(form -> form
-                        .loginPage("/login") // Ссылка, по которой открывается страница входа
-                        .loginProcessingUrl("/login") // URL, на который форма отправляет POST
-                        .successHandler((request, response, authentication) -> {
-                            try {
-                                HttpSession session = request.getSession();
-                                session.setAttribute("pendingName", authentication.getName());
-                                User user = userService.findByUsername(authentication.getName());
-                                verificationTokenService.deleteOldToken(user);
-                                verificationTokenService.generateNewToken(user);
-                                response.sendRedirect("/verify-login");
-                            } catch (MessagingException e) {
-                                response.sendRedirect("/login?error");
-                            }
-                        })
-                        .failureHandler((request, response, exception) -> {
-                            // Неверный логин/пароль
-                            response.sendRedirect("/login?error=bad_credentials");
-                        })
+                        .loginPage("/login")
+                        .loginProcessingUrl("/login")
+                        .defaultSuccessUrl("/", true)
                         .permitAll()
                 )
+//                .formLogin(form -> form
+//                        .loginPage("/login") // Ссылка, по которой открывается страница входа
+//                        .loginProcessingUrl("/login") // URL, на который форма отправляет POST
+//                        .successHandler((request, response, authentication) -> {
+//                            try {
+//                                HttpSession session = request.getSession();
+//                                session.setAttribute("pendingName", authentication.getName());
+//                                User user = userService.findByUsername(authentication.getName());
+//                                verificationTokenService.deleteOldToken(user);
+//                                verificationTokenService.generateNewToken(user);
+//                                response.sendRedirect("/verify-login");
+//                            } catch (MessagingException e) {
+//                                response.sendRedirect("/login?error");
+//                            }
+//                        })
+//                        .failureHandler((request, response, exception) -> {
+//                            // Неверный логин/пароль
+//                            response.sendRedirect("/login?error=bad_credentials");
+//                        })
+//                        .permitAll()
+//                )
                 .rememberMe(remember -> remember
                         .key("naugramSecretKey")
                         .tokenValiditySeconds(2592000)

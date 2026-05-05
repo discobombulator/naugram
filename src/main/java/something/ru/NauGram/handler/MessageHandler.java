@@ -1,6 +1,9 @@
 package something.ru.NauGram.handler;
 
 import org.jspecify.annotations.NonNull;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -8,10 +11,12 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
+import something.ru.NauGram.model.User;
+import something.ru.NauGram.service.UserService;
 
 import java.io.IOException;
-import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -19,24 +24,42 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 public class MessageHandler extends TextWebSocketHandler {
+    private static final Logger log = LoggerFactory.getLogger(MessageHandler.class);
+
     private static final Map<String, Set<WebSocketSession>> rooms = new ConcurrentHashMap<>();
     private static final Map<WebSocketSession, SessionInfo> sessionInfo = new ConcurrentHashMap<>();
+
+    private final UserService userService;
+
+    // Constructor injection for UserService
+
+    public MessageHandler(UserService userService) {
+        this.userService = userService;
+    }
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         String path = Objects.requireNonNull(session.getUri()).getPath();
         String roomId = extractRoomId(path);
-        String username = extractUsername(session);
 
-        if (roomId == null) {
+        // Get authenticated user from multiple possible sources
+        String username = extractAuthenticatedUsername(session);
+
+        if (roomId == null || username == null) {
             session.close(CloseStatus.BAD_DATA);
             return;
         }
 
         rooms.computeIfAbsent(roomId, k -> new CopyOnWriteArraySet<>()).add(session);
         sessionInfo.put(session, new SessionInfo(roomId, username));
+
+        // Store user info in session attributes for later use
+        session.getAttributes().put("username", username);
 
         broadcastToRoom(roomId, createSystemMessage(username + " joined the room"), session);
         broadcastUserList(roomId);
@@ -79,23 +102,76 @@ public class MessageHandler extends TextWebSocketHandler {
         }
     }
 
+    /**
+     * Extracts authenticated username from WebSocket session
+     * Uses multiple fallback methods to ensure we get the real user
+     */
+    private String extractAuthenticatedUsername(WebSocketSession session) {
+        // Method 1: From WebSocket session principal (most reliable)
+        Principal principal = session.getPrincipal();
+        if (principal != null) {
+            String username = principal.getName();
+            log.info("user login {}", username);
+            // If using UserPrincipal, we might want to extract the actual username
+            // If the principal name is email, extract the username part
+            if (username.contains("@")) {
+                return username.substring(0, username.indexOf("@"));
+            }
+            return username;
+        }
+
+
+
+        // Method 3: From session attributes (if set by handshake interceptor)
+        if (session.getAttributes().containsKey("username")) {
+            return (String) session.getAttributes().get("username");
+        }
+
+        return null;
+    }
+
+//    /**
+//     * Fallback method to extract username from URL query parameters
+//     * Only used if user is not authenticated
+//     */
+//    private String extractUsernameFromQuery(WebSocketSession session) {
+//        String query = Objects.requireNonNull(session.getUri()).getQuery();
+//        if (query != null) {
+//            for (String param : query.split("&")) {
+//                String[] pair = param.split("=");
+//                if (pair.length == 2 && "username".equals(pair[0])) {
+//                    return URLDecoder.decode(pair[1], StandardCharsets.UTF_8);
+//                }
+//            }
+//        }
+//        return "Anonymous-" + session.getId().substring(0, 4);
+//    }
+
+    /**
+     * Gets the full User domain object from WebSocket session
+     * Useful if you need more than just the username
+     */
+    private User getAuthenticatedUser(WebSocketSession session) {
+        Principal principal = session.getPrincipal();
+        if (principal != null) {
+            return userService.findByEmail(principal.getName());
+        }
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated()) {
+            if (auth.getPrincipal() instanceof User user) {
+                return user;
+            }
+            return userService.findByEmail(auth.getName());
+        }
+
+        return null;
+    }
+
     private String extractRoomId(String path) {
         // Expected path: /chat/{roomId}
         String[] parts = path.split("/");
         return parts.length > 2 ? parts[2] : null;
-    }
-
-    private String extractUsername(WebSocketSession session) {
-        String query = Objects.requireNonNull(session.getUri()).getQuery();
-        if (query != null) {
-            for (String param : query.split("&")) {
-                String[] pair = param.split("=");
-                if (pair.length == 2 && "username".equals(pair[0])) {
-                    return URLDecoder.decode(pair[1], StandardCharsets.UTF_8);
-                }
-            }
-        }
-        return "Anonymous-" + session.getId().substring(0, 4);
     }
 
     private String createSystemMessage(String content) {
@@ -144,8 +220,7 @@ public class MessageHandler extends TextWebSocketHandler {
     private void broadcastUserList(String roomId) {
         Set<WebSocketSession> roomSessions = rooms.get(roomId);
         if (roomSessions != null) {
-            List<String> usernames;
-            usernames = roomSessions.stream()
+            List<String> usernames = roomSessions.stream()
                     .map(sessionInfo::get)
                     .filter(Objects::nonNull)
                     .map(info -> info.username)
