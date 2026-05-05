@@ -37,7 +37,7 @@ public class SpringSecurityConfig{
                 .authorizeHttpRequests(auth -> auth
 
                         .requestMatchers("/login", "/registration","/verify-login", "/resend-code",
-                                "/verify-registration","/logo.png", "/static/**")
+                                "/verify-registration","/logo.png", "/static/**", "/ws/**")
                         .permitAll()
 
                         .requestMatchers(
