@@ -30,6 +30,10 @@ public class User {
 
     private String profileImagePath;
 
+    private String password;
+
+    private String email;
+
     @Enumerated(EnumType.STRING)
     private UserRole role;
 
@@ -38,6 +42,14 @@ public class User {
 
     @OneToMany(mappedBy = "sender", fetch = FetchType.LAZY)
     private List<Message> messages;
+
+    @Column(name = "enabled")
+    private boolean enabled;
+
+    public User() {
+        super();
+        this.enabled=false;
+    }
 
     @PrePersist
     protected void onCreate() {
@@ -98,5 +110,29 @@ public class User {
 
     public List<Message> getMessages() {
         return messages;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 }
