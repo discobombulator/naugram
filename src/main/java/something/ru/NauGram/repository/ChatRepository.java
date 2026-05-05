@@ -14,4 +14,6 @@ public interface ChatRepository extends CrudRepository<Chat, Long> {
             "JOIN c.participants p " +
             "WHERE p.user = :user ")
     List<Chat> findByUser(@Param("user") User user);
+
+    Chat findById(long id);
 }

@@ -3,6 +3,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <title>NauGram - Chats</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -21,57 +22,6 @@
             flex-direction: column;
         }
 
-        .sidebar-header {
-            padding: 15px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .header-top {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
-        .settings-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: #f5833d;
-            font-size: 24px;
-            padding: 5px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.2s;
-        }
-
-        .settings-btn:hover {
-            transform: rotate(45deg);
-        }
-
-        .search-wrapper {
-            position: relative;
-        }
-
-        .search-input {
-            width: 100%;
-            height: 45px;
-            background: #f1f1f1;
-            border: 2px solid transparent;
-            border-radius: 12px;
-            padding: 0 15px;
-            box-sizing: border-box;
-            outline: none;
-            transition: 0.3s;
-        }
-
-        .search-input:focus {
-            border-color: #f5833d;
-            background: white;
-        }
-
-        /* Список чатов */
         .chats-list {
             flex: 1;
             overflow-y: auto;
@@ -114,14 +64,6 @@
             font-weight: bold;
             color: #333;
             margin-bottom: 4px;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .chat-time {
-            font-size: 12px;
-            color: #999;
-            font-weight: normal;
         }
 
         .chat-last-msg {
@@ -132,17 +74,25 @@
             text-overflow: ellipsis;
         }
 
+        /* Main content area */
         .main-content {
             flex: 1;
             display: flex;
-            align-items: center;
-            justify-content: center;
+            flex-direction: column;
             background-color: #f7f9fb;
             position: relative;
         }
 
+        /* Welcome message - shown when no chat selected */
         .welcome-msg {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
             text-align: center;
+        }
+
+        .welcome-msg > div {
             background: white;
             padding: 40px;
             border-radius: 20px;
@@ -155,17 +105,172 @@
             margin-top: 0;
         }
 
-        /* Скроллбар в оранжевом стиле */
-        .chats-list::-webkit-scrollbar {
+        /* Chat window - hidden by default */
+        .chat-window {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .chat-window.visible {
+            display: flex;
+        }
+
+        .chat-header {
+            padding: 15px 20px;
+            background: white;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .chat-header .chat-avatar {
+            width: 45px;
+            height: 45px;
+            font-size: 18px;
+        }
+
+        .chat-header-info {
+            flex: 1;
+        }
+
+        .chat-header-info h3 {
+            margin: 0;
+            color: #333;
+        }
+
+        .chat-header-info p {
+            margin: 5px 0 0 0;
+            color: #999;
+            font-size: 13px;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #f5833d;
+            font-size: 20px;
+            padding: 5px 10px;
+            display: none;
+        }
+
+        .messages-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .message {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 15px;
+            word-wrap: break-word;
+        }
+
+        .message.sent {
+            align-self: flex-end;
+            background-color: #f5833d;
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message.received {
+            align-self: flex-start;
+            background-color: white;
+            color: #333;
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .message-time {
+            font-size: 11px;
+            opacity: 0.7;
+            margin-top: 5px;
+            text-align: right;
+        }
+
+        .message-input-area {
+            padding: 15px 20px;
+            background: white;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+        }
+
+        .message-input {
+            flex: 1;
+            height: 45px;
+            border: 2px solid #eee;
+            border-radius: 25px;
+            padding: 0 20px;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .message-input:focus {
+            border-color: #f5833d;
+        }
+
+        .send-btn {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: #f5833d;
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.3s;
+        }
+
+        .send-btn:hover {
+            background: #e07030;
+            transform: scale(1.05);
+        }
+
+        /* Scrollbar styling */
+        .chats-list::-webkit-scrollbar,
+        .messages-area::-webkit-scrollbar {
             width: 6px;
         }
-        .chats-list::-webkit-scrollbar-thumb {
+        .chats-list::-webkit-scrollbar-thumb,
+        .messages-area::-webkit-scrollbar-thumb {
             background: #f5833d55;
             border-radius: 10px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                flex-shrink: 0;
+            }
+
+            .chat-window {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 100;
+                background: #f7f9fb;
+            }
+
+            .back-btn {
+                display: block;
+            }
         }
     </style>
 </head>
 <body>
+<!-- Sidebar with chat list -->
 <div class="sidebar">
     <div class="chats-list">
         <!-- Iterate over chats with onclick redirect -->
@@ -195,12 +300,94 @@
     </div>
 </div>
 
+<!-- Main content area -->
 <div class="main-content">
-    <div class="welcome-msg">
-        <h2>Welcome to NauGram</h2>
-        <p>Select a chat to start messaging</p>
-        <p>Total chats: <span th:text="${chatCount}">0</span></p>
+    <!-- Welcome message - visible when no chat is selected -->
+    <div id="welcomeMessage" class="welcome-msg" th:if="${selectedChat == null}">
+        <div>
+            <h2>Welcome to NauGram</h2>
+            <p>Select a chat to start messaging</p>
+            <p>Total chats: <span th:text="${chatCount}">0</span></p>
+        </div>
+    </div>
+
+    <!-- Chat window - hidden by default, shown when chat is selected -->
+    <div id="chatWindow" class="chat-window" th:if="${selectedChat != null}">
+        <!-- Chat Header -->
+        <div class="chat-header">
+            <button class="back-btn" onclick="window.location.href='/chats'">←</button>
+            <div class="chat-avatar">
+                <span th:text="${selectedChat.chatName != null ? #strings.substring(selectedChat.chatName, 0, 1) : '?'}">?</span>
+            </div>
+            <div class="chat-header-info">
+                <h3 th:text="${selectedChat.chatName != null ? selectedChat.chatName : 'Unnamed Chat'}">Chat Name</h3>
+                <p>
+                    ID: <span th:text="${selectedChat.id}">1</span> |
+                    Type: <span th:text="${selectedChat.chatType}">type</span>
+                </p>
+            </div>
+        </div>
+
+        <!-- Messages Area -->
+        <div class="messages-area" id="messagesContainer">
+            <!-- Example messages (you can populate dynamically) -->
+            <div class="message received">
+                <div>Hello! Welcome to the chat.</div>
+                <div class="message-time">10:30 AM</div>
+            </div>
+            <div class="message sent">
+                <div>Hi! Thanks for having me.</div>
+                <div class="message-time">10:31 AM</div>
+            </div>
+        </div>
+
+        <!-- Message Input Area -->
+        <div class="message-input-area">
+            <input type="text" class="message-input" placeholder="Type a message...">
+            <button class="send-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="5 12 20 12"></polyline>
+                    <polyline points="13 18 20 12 13 6"></polyline>
+                </svg>
+            </button>
+        </div>
     </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+<script th:inline="javascript">
+
+    var stompClient = null
+    const handlers = []
+
+    export function connect() {
+        const socket = new SockJS('/chats')
+        stompClient = Stomp.over(socket)
+        stompClient.connect({}, frame => {
+            console.log('Connected: ' + frame)
+            stompClient.subscribe('/topic/activity', message => {
+                handlers.forEach(handler => handler(JSON.parse(message.body)))
+            })
+        })
+    }
+
+    export function addHandler(handler) {
+        handlers.push(handler)
+    }
+
+    export function disconnect() {
+        if (stompClient !== null) {
+            stompClient.disconnect()
+        }
+        console.log("Disconnected")
+    }
+
+    export function sendMessage(message) {
+        stompClient.send("/app/changeMessage", {}, JSON.stringify(message))
+    }
+
+    connect()
+    /*]]>*/
+</script>
 </body>
 </html>

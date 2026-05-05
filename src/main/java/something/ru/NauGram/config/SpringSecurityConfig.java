@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 import something.ru.NauGram.model.User;
 import something.ru.NauGram.service.UserService;
@@ -44,7 +45,7 @@ public class SpringSecurityConfig{
                                 "/v3/api-docs/**"
                         ).hasRole("ADMIN")
 
-                        .requestMatchers("/api/**").authenticated()
+                        .requestMatchers("/chats/**", "/api/**").authenticated()
 
                         .anyRequest().authenticated()
                 )
@@ -81,7 +82,6 @@ public class SpringSecurityConfig{
                         .rememberMeParameter("remember-me")
                         .userDetailsService(userService)
                 )
-
                 .logout(logout -> logout
                         .logoutSuccessUrl("/login")
                         .permitAll()

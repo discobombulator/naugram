@@ -31,7 +31,7 @@ public class UserService implements UserDetailsService {
     /**
      * Конструктор сервиса.
      *
-     * @param userRepository репозиторий для работы с пользователями в БД
+     * @param userRepository  репозиторий для работы с пользователями в БД
      * @param passwordEncoder энкодер для хэширования паролей
      */
     public UserService(UserRepository userRepository,
@@ -70,7 +70,7 @@ public class UserService implements UserDetailsService {
      *
      * @param email email пользователя которого нужно активировать
      */
-    public void saveEnabled(String email){
+    public void saveEnabled(String email) {
         userRepository.enableUser(email);
     }
 
@@ -85,7 +85,7 @@ public class UserService implements UserDetailsService {
     @NonNull
     public UserDetails loadUserByUsername(@NonNull String username) throws UsernameNotFoundException {
         User user = userRepository.findByEmail(username);
-        if(user == null){
+        if (user == null) {
             throw new UsernameNotFoundException("User not found");
         }
 
@@ -100,19 +100,19 @@ public class UserService implements UserDetailsService {
      * @param email email пользователя
      * @return объект {@link User} или null если не найден
      */
-    public User findByEmail(String email){
+    public User findByEmail(String email) {
         return userRepository.findByEmail(email);
     }
 
-    public Optional<User> findById(Long id){
+    public Optional<User> findById(Long id) {
         return userRepository.findById(id);
     }
 
-    public User findByUsername(String username){
+    public User findByUsername(String username) {
         return userRepository.findByUsername(username);
     }
 
-    public User getCurrentUser(){
+    public User getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         if (auth == null || !auth.isAuthenticated()) {
@@ -120,7 +120,6 @@ public class UserService implements UserDetailsService {
             return null;
         }
 
-        // Check for anonymous user
         if ("anonymousUser".equals(auth.getPrincipal())) {
             log.debug("Anonymous user, returning null");
             return null;
@@ -128,25 +127,15 @@ public class UserService implements UserDetailsService {
 
         log.debug("Getting current user from authentication: {}", auth.getName());
 
-        // Try to get User from different principal types
         Object principal = auth.getPrincipal();
 
 
-        // If principal is Spring's UserDetails
         if (principal instanceof UserDetails userDetails) {
-            // Try by email first (since you use email for login)
             String username = userDetails.getUsername();
-            User user = findByEmail(username);
 
-            // If not found by email, try by username
-            if (user == null) {
-                user = findByUsername(username);
-            }
-
-            return user;
+            return findByUsername(username);
         }
 
-        // Last resort: try to find by authentication name
         String username = auth.getName();
         User user = findByEmail(username);
         if (user == null) {

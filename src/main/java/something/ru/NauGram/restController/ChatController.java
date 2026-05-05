@@ -2,6 +2,7 @@ package something.ru.NauGram.restController;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.Banner;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -36,6 +37,13 @@ public class ChatController {
     @GetMapping("/chats")
     public String chatsPage(Model model) {
         log.info("Loading chats page");
+//        log.info("Username {}", userService.getCurrentUser().getUsername());
+        addToScrollBar(model);
+
+        return "chat"; // This will look for src/main/resources/templates/chats.html
+    }
+
+    private void addToScrollBar(Model model) {
 
         try {
             User user = userService.getCurrentUser();
@@ -50,21 +58,21 @@ public class ChatController {
             model.addAttribute("chats", List.of());
             model.addAttribute("error", "Failed to load chats");
         }
-
-        return "chat"; // This will look for src/main/resources/templates/chats.html
     }
 
     /**
      * Specific chat page
      */
-    @GetMapping("/chat/{chatId}")
+    @GetMapping("/chats/{chatId}")
     public String chatPage(@PathVariable Long chatId, Model model) {
+
+        addToScrollBar(model);
+
         log.info("Loading chat page for chat ID: {}", chatId);
+        Chat ch = chatService.getChat(chatId);
+        model.addAttribute("selectedChat", ch);
 
-        // You can add chat-specific data here
-        model.addAttribute("chatId", chatId);
-
-        return "chat"; // This will look for src/main/resources/templates/chat.html
+        return "chat";
     }
 
 }

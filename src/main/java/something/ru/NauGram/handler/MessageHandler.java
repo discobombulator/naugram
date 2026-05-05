@@ -1,21 +1,21 @@
 package something.ru.NauGram.handler;
 
 import org.jspecify.annotations.NonNull;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
+import something.ru.NauGram.model.User;
+import something.ru.NauGram.service.UserService;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
-import something.ru.NauGram.model.User;
-import something.ru.NauGram.service.UserService;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import java.util.List;
 import java.util.Map;
@@ -24,8 +24,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 public class MessageHandler extends TextWebSocketHandler {
@@ -36,30 +34,38 @@ public class MessageHandler extends TextWebSocketHandler {
 
     private final UserService userService;
 
-    // Constructor injection for UserService
-
     public MessageHandler(UserService userService) {
         this.userService = userService;
     }
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+        log.info("Connection establicshtajlk connected");
         String path = Objects.requireNonNull(session.getUri()).getPath();
         String roomId = extractRoomId(path);
 
-        // Get authenticated user from multiple possible sources
         String username = extractAuthenticatedUsername(session);
 
         if (roomId == null || username == null) {
+            log.warn("Connection rejected - roomId: {}, username: {}", roomId, username);
             session.close(CloseStatus.BAD_DATA);
             return;
         }
 
+        log.info("User '{}' connected to room '{}'", username, roomId);
+
         rooms.computeIfAbsent(roomId, k -> new CopyOnWriteArraySet<>()).add(session);
         sessionInfo.put(session, new SessionInfo(roomId, username));
 
-        // Store user info in session attributes for later use
+        // Store user info in session attributes
         session.getAttributes().put("username", username);
+
+        // Get full user object if needed
+        User user = getAuthenticatedUser(session);
+        if (user != null) {
+            session.getAttributes().put("userId", user.getId());
+            session.getAttributes().put("userEmail", user.getEmail());
+        }
 
         broadcastToRoom(roomId, createSystemMessage(username + " joined the room"), session);
         broadcastUserList(roomId);
@@ -107,28 +113,36 @@ public class MessageHandler extends TextWebSocketHandler {
      * Uses multiple fallback methods to ensure we get the real user
      */
     private String extractAuthenticatedUsername(WebSocketSession session) {
-        // Method 1: From WebSocket session principal (most reliable)
+        // Method 1: From session attributes (set by handshake interceptor)
+        Object usernameAttr = session.getAttributes().get("username");
+        if (usernameAttr != null) {
+            return usernameAttr.toString();
+        }
+
+        // Method 2: From WebSocket session principal
         Principal principal = session.getPrincipal();
         if (principal != null) {
             String username = principal.getName();
-            log.info("user login {}", username);
-            // If using UserPrincipal, we might want to extract the actual username
-            // If the principal name is email, extract the username part
+            log.debug("Principal found: {}", username);
+            // Handle email-based usernames
             if (username.contains("@")) {
                 return username.substring(0, username.indexOf("@"));
             }
             return username;
         }
 
-
-
-        // Method 3: From session attributes (if set by handshake interceptor)
-        if (session.getAttributes().containsKey("username")) {
-            return (String) session.getAttributes().get("username");
+        // Method 3: From SecurityContextHolder
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
+            if (auth.getPrincipal() instanceof User user) {
+                return user.getUsername();
+            }
+            return auth.getName();
         }
 
         return null;
     }
+
 
 //    /**
 //     * Fallback method to extract username from URL query parameters

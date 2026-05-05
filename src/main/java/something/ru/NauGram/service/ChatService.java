@@ -4,15 +4,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import something.ru.NauGram.model.Chat;
-import something.ru.NauGram.model.ChatParticipant;
-import something.ru.NauGram.model.ParticipantRole;
 import something.ru.NauGram.model.User;
 import something.ru.NauGram.repository.ChatParticipantRepository;
 import something.ru.NauGram.repository.ChatRepository;
 import something.ru.NauGram.repository.UserRepository;
 
-import java.time.LocalDateTime;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -52,8 +51,17 @@ public class ChatService {
 //        chatParticipantRepository.save(cp);
     }
 
-    public List<Chat> getCurrentUserChats(User user){
+    public List<Chat> getCurrentUserChats(User user) {
         return chatRepository.findByUser(user);
     }
 
+    public Chat getChat(Long chatId) {
+        Optional<Chat> chatOptional = chatRepository.findById(chatId);
+        if (chatOptional.isEmpty()) {
+            log.error("There is no chat with such id {}", chatId);
+            throw new NoSuchElementException();
+        } else {
+            return chatOptional.get();
+        }
+    }
 }
