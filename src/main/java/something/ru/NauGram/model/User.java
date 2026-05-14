@@ -37,12 +37,6 @@ public class User {
     @Enumerated(EnumType.STRING)
     private UserRole role;
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-    private List<ChatParticipant> chatParticipants;
-
-    @OneToMany(mappedBy = "sender", fetch = FetchType.LAZY)
-    private List<Message> messages;
-
     @Column(name = "enabled")
     private boolean enabled;
 
@@ -102,14 +96,6 @@ public class User {
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
-    }
-
-    public List<ChatParticipant> getChatParticipants() {
-        return chatParticipants;
-    }
-
-    public List<Message> getMessages() {
-        return messages;
     }
 
     public String getPassword() {

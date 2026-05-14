@@ -4,11 +4,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import something.ru.NauGram.model.Chat;
+import something.ru.NauGram.model.ChatParticipant;
+import something.ru.NauGram.model.ParticipantRole;
 import something.ru.NauGram.model.User;
 import something.ru.NauGram.repository.ChatParticipantRepository;
 import something.ru.NauGram.repository.ChatRepository;
 import something.ru.NauGram.repository.UserRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -27,11 +30,16 @@ public class ChatService {
         this.chatRepository = chatRepository;
         this.userRepository = userRepository;
         this.chatParticipantRepository = chatParticipantRepository;
-
 //        try{
-//            User user = userRepository.findByUsername("afk");
-//            List<Chat> chats = chatRepository.findByUser(user);
-//            log.info("chat at {}", chats.stream().map(Chat::getChatName).toList());
+//            var cp = chatParticipantRepository.findByChatId(3);
+////            List<Chat> chats = chatRepository.findByUser(user);
+////            log.info("{} at {}",user.getId(), chat.getId());
+//            for (var c : cp){
+//                if (c.getUser().getId() == 5){
+//                    chatParticipantRepository.delete(c);
+//                    break;
+//                }
+//            }
 //        } catch (Exception e) {
 //            log.error("cannot locate user ", e);
 //        }
@@ -44,8 +52,8 @@ public class ChatService {
 //
 //
 //        ChatParticipant cp = new ChatParticipant();
-//        cp.setChat(chat);
-//        cp.setUser(user);
+//        cp.setChat(chatRepository.findById(3));
+//        cp.setUser(userRepository.findByUsername("afk2"));
 //        cp.setJoinedAt(LocalDateTime.now());
 //        cp.setRole(ParticipantRole.USER);
 //        chatParticipantRepository.save(cp);
@@ -63,5 +71,10 @@ public class ChatService {
         } else {
             return chatOptional.get();
         }
+    }
+
+    public List<User> getChatParticipants(long chatId){
+        return chatParticipantRepository.findByChatId(chatId).stream()
+                .map(ChatParticipant::getUser).toList();
     }
 }
