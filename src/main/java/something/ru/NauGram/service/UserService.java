@@ -1,7 +1,10 @@
 package something.ru.NauGram.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -18,6 +21,7 @@ import java.util.Optional;
  * Сервис для работы с пользователями.
  * Реализует {@link UserDetailsService} для интеграции со Spring Security.
  */
+@Slf4j
 @Service
 public class UserService implements UserDetailsService {
 
@@ -27,7 +31,7 @@ public class UserService implements UserDetailsService {
     /**
      * Конструктор сервиса.
      *
-     * @param userRepository репозиторий для работы с пользователями в БД
+     * @param userRepository  репозиторий для работы с пользователями в БД
      * @param passwordEncoder энкодер для хэширования паролей
      */
     public UserService(UserRepository userRepository,
@@ -66,7 +70,7 @@ public class UserService implements UserDetailsService {
      *
      * @param email email пользователя которого нужно активировать
      */
-    public void saveEnabled(String email){
+    public void saveEnabled(String email) {
         userRepository.enableUser(email);
     }
 
@@ -81,7 +85,7 @@ public class UserService implements UserDetailsService {
     @NonNull
     public UserDetails loadUserByUsername(@NonNull String username) throws UsernameNotFoundException {
         User user = userRepository.findByEmail(username);
-        if(user == null){
+        if (user == null) {
             throw new UsernameNotFoundException("User not found");
         }
 
@@ -96,15 +100,67 @@ public class UserService implements UserDetailsService {
      * @param email email пользователя
      * @return объект {@link User} или null если не найден
      */
-    public User findByEmail(String email){
+    public User findByEmail(String email) {
         return userRepository.findByEmail(email);
     }
 
-    public Optional<User> findById(Long id){
+    public Optional<User> findById(Long id) {
         return userRepository.findById(id);
     }
 
-    public User findByUsername(String username){
+    public User findByUsername(String username) {
         return userRepository.findByUsername(username);
+    }
+
+    /**
+     * Получает текущего аутентифицированного пользователя из контекста безопасности Spring Security.
+     *
+     * <p>Метод выполняет следующие проверки:
+     * <ul>
+     *     <li>Если аутентификация отсутствует или пользователь не аутентифицирован, возвращает {@code null}</li>
+     *     <li>Если пользователь является анонимным (anonymousUser), возвращает {@code null}</li>
+     *     <li>Если principal является экземпляром {@link UserDetails}, извлекает имя пользователя и выполняет поиск</li>
+     *     <li>В противном случае пытается найти пользователя по email, а если не найден — по имени пользователя</li>
+     * </ul>
+     *
+     * @return текущий аутентифицированный пользователь или {@code null}, если:
+     *         <ul>
+     *             <li>отсутствует контекст аутентификации</li>
+     *             <li>пользователь не аутентифицирован</li>
+     *             <li>пользователь является анонимным</li>
+     *             <li>пользователь не найден в базе данных</li>
+     *         </ul>
+     */
+    public User getCurrentUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated()) {
+            log.debug("No authenticated user found");
+            return null;
+        }
+
+        if ("anonymousUser".equals(auth.getPrincipal())) {
+            log.debug("Anonymous user, returning null");
+            return null;
+        }
+
+        log.debug("Getting current user from authentication: {}", auth.getName());
+
+        Object principal = auth.getPrincipal();
+
+
+        if (principal instanceof UserDetails userDetails) {
+            String username = userDetails.getUsername();
+
+            return findByUsername(username);
+        }
+
+        String username = auth.getName();
+        User user = findByEmail(username);
+        if (user == null) {
+            user = findByUsername(username);
+        }
+
+        return user;
     }
 }

@@ -44,11 +44,16 @@ public class SpringSecurityConfig{
                                 "/v3/api-docs/**"
                         ).hasRole("ADMIN")
 
-                        .requestMatchers("/api/**").authenticated()
+                        .requestMatchers("/chats/**", "/api/**").authenticated()
 
                         .anyRequest().authenticated()
                 )
-
+//                .formLogin(form -> form
+//                        .loginPage("/login")
+//                        .loginProcessingUrl("/login")
+//                        .defaultSuccessUrl("/chats", true)
+//                        .permitAll()
+//                )
                 .formLogin(form -> form
                         .loginPage("/login") // Ссылка, по которой открывается страница входа
                         .loginProcessingUrl("/login") // URL, на который форма отправляет POST
