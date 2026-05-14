@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>NauGram - Подтверждение почты</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f7f9fb;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .registration-container {
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        .logo {
+            width: 200px;
+            height: 200px;
+            background-image: url('/logo.png');
+            background-size: cover;
+            margin: 0 auto 20px;
+        }
+
+        .title {
+            color: #f5833d;
+            font-size: 28px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 40px;
+        }
+
+        .input-group {
+            text-align: left;
+            margin-bottom: 15px;
+            width: 100%;
+        }
+
+        .input-group label {
+            display: block;
+            color: #f5833d;
+            font-size: 16px;
+            margin-bottom: 8px;
+            margin-left: 5px;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            height: 70px;
+            padding: 0 20px;
+            font-size: 24px;
+            letter-spacing: 10px;
+            text-align: center;
+            border: 2px solid #f5833d;
+            border-radius: 15px;
+            outline: none;
+            box-sizing: border-box;
+            background: white;
+            color: #333;
+        }
+
+        .timer-text {
+            font-size: 14px;
+            color: #999;
+            margin-bottom: 30px;
+            text-align: left;
+            margin-left: 5px;
+        }
+
+        .timer-text span {
+            color: #f5833d;
+            font-weight: bold;
+        }
+
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .button {
+            width: 100%;
+            height: 70px;
+            background-color: white;
+            color: #f5833d;
+            border: 2px solid #f5833d;
+            border-radius: 15px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .button:hover:not(:disabled) {
+            background-color: #f5833d;
+            color: white;
+        }
+
+        .button:disabled {
+            border-color: #ccc;
+            color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .resend-link {
+            background: none;
+            border: none;
+            color: #f5833d;
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 10px;
+            transition: 0.3s;
+        }
+
+        .resend-link:disabled {
+            color: #ccc;
+            text-decoration: none;
+            cursor: default;
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .error {
+            background-color: #ff4d4d;
+            color: white;
+        }
+
+        .success {
+            background-color: #4caf50;
+            color: white;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="registration-container">
+    <div class="logo"></div>
+    <div class="title">Код подтверждения</div>
+    <div class="subtitle">Мы отправили письмо с кодом на вашу почту</div>
+    <div th:if="${error}" class="notification error" id="notification1">
+        <span th:text="${error}"></span>
+    </div>
+
+    <div th:if="${success}" class="notification success" id="notification2">
+        <span th:text="${success}"></span>
+    </div>
+
+    <script>
+        const notification1 = document.getElementById("notification1");
+
+        setTimeout(() => {
+            notification1.style.display = "none";
+        }, 5000);
+
+        const notification2 = document.getElementById("notification2");
+
+        setTimeout(() => {
+            notification2.style.display = "none";
+        }, 5000);
+
+    </script>
+
+    <form action="/verify-registration" method="POST">
+        <input type="hidden" id="userEmail" th:value="${email}">
+        <div class="input-group">
+            <label>Введите код из письма</label>
+            <div class="input-wrapper">
+                <input type="text" name="otp_code" maxlength="6" placeholder="000000" autocomplete="one-time-code" required autofocus>
+            </div>
+        </div>
+
+        <div class="timer-text" id="timer-container">
+            Повторный запрос доступен через: <span id="timer-seconds">60</span> сек.
+        </div>
+
+        <div class="button-container">
+            <button type="submit" class="button">Подтвердить</button>
+            <button type="button" id="resend-btn" class="resend-link" disabled onclick="resendCode()">Отправить код еще раз</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    let timeLeft = 60;
+    const timerElement = document.getElementById('timer-seconds');
+    const timerContainer = document.getElementById('timer-container');
+    const resendBtn = document.getElementById('resend-btn');
+
+    function startTimer() {
+        const timerId = setInterval(() => {
+            timeLeft--;
+            timerElement.textContent = timeLeft;
+
+            if (timeLeft <= 0) {
+                clearInterval(timerId);
+                timerContainer.style.display = 'none';
+                resendBtn.disabled = false;
+            }
+        }, 1000);
+    }
+
+    function resendCode() {
+        fetch('/resend-code', {
+            method: 'POST'
+        }).then(response => {
+            if (response.ok) {
+                alert("Код отправлен повторно!");
+            }
+        });
+
+        // Сбрасываем таймер
+        timeLeft = 60;
+        timerElement.textContent = timeLeft;
+        timerContainer.style.display = 'block';
+        resendBtn.disabled = true;
+        startTimer();
+    }
+
+    window.onload = startTimer;
+
+
+</script>
+
+</body>
+</html>

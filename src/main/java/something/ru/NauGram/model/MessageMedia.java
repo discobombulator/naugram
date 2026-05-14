@@ -1,6 +1,7 @@
 package something.ru.NauGram.model;
 
 import jakarta.persistence.*;
+import lombok.Data;
 
 /**
  * Сущность для хранения медиафайлов, связанных с сообщением.
@@ -12,6 +13,7 @@ import jakarta.persistence.*;
  * <p>Дополнительно хранит порядковый номер, определяющий
  * последовательность отображения медиафайлов в рамках сообщения.</p>
  */
+@Data
 @Entity
 public class MessageMedia {
     @Id
@@ -27,40 +29,4 @@ public class MessageMedia {
     private String mediaPath;
 
     private Integer mediaOrder;
-
-    public Message getMessage() {
-        return message;
-    }
-
-    public void setMessage(Message message) {
-        this.message = message;
-    }
-
-    public String getMediaType() {
-        return mediaType;
-    }
-
-    public void setMediaType(String mediaType) {
-        this.mediaType = mediaType;
-    }
-
-    public String getMediaPath() {
-        return mediaPath;
-    }
-
-    public void setMediaPath(String mediaPath) {
-        this.mediaPath = mediaPath;
-    }
-
-    public Integer getMediaOrder() {
-        return mediaOrder;
-    }
-
-    public void setMediaOrder(Integer mediaOrder) {
-        this.mediaOrder = mediaOrder;
-    }
-
-    public Long getId() {
-        return id;
-    }
 }
