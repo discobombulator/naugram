@@ -81,6 +81,7 @@ public class SpringSecurityConfig{
                         .rememberMeParameter("remember-me")
                         .userDetailsService(userService)
                 )
+
                 .logout(logout -> logout
                         .logoutSuccessUrl("/login")
                         .permitAll()

@@ -46,6 +46,14 @@ public class User {
         this.enabled = false;
     }
 
+    @Column(name = "enabled")
+    private boolean enabled;
+
+    public User() {
+        super();
+        this.enabled=false;
+    }
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
