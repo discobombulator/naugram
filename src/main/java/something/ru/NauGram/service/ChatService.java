@@ -5,13 +5,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import something.ru.NauGram.model.Chat;
 import something.ru.NauGram.model.ChatParticipant;
-import something.ru.NauGram.model.ParticipantRole;
 import something.ru.NauGram.model.User;
 import something.ru.NauGram.repository.ChatParticipantRepository;
 import something.ru.NauGram.repository.ChatRepository;
 import something.ru.NauGram.repository.UserRepository;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;

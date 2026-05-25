@@ -23,17 +23,15 @@ public class User {
     @Column(unique = true, nullable = false)
     private String username;
 
-    private String realName;
-
-    private LocalDate birthDate;
-
     private LocalDateTime createdAt;
-
-    private String profileImagePath;
 
     private String password;
 
     private String email;
+
+    private String language;
+
+    private Boolean faStatus;
 
     @Enumerated(EnumType.STRING)
     private UserRole role;
@@ -43,15 +41,9 @@ public class User {
 
     public User() {
         super();
-        this.enabled = false;
-    }
-
-    @Column(name = "enabled")
-    private boolean enabled;
-
-    public User() {
-        super();
         this.enabled=false;
+        this.faStatus = false;
+        this.language = "ru";
     }
 
     @PrePersist

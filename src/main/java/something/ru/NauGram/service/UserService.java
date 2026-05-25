@@ -10,6 +10,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import something.ru.NauGram.model.User;
 import something.ru.NauGram.model.UserRole;
 import something.ru.NauGram.repository.UserRepository;
@@ -61,6 +62,69 @@ public class UserService implements UserDetailsService {
         user.setEmail(email);
         user.setUsername(email.substring(0, email.indexOf("@")));
 
+        userRepository.save(user);
+    }
+    /**
+     * Изменяет пароль пользователя.
+     *
+     * <p>Если новый пароль не указан, метод ничего не изменяет. Если новый пароль
+     * указан, метод проверяет наличие текущего пароля, сверяет его с сохранённым
+     * хэшем и проверяет минимальную длину нового пароля.</p>
+     *
+     * @param user пользователь, которому необходимо изменить пароль
+     * @param oldPassword текущий пароль пользователя
+     * @param newPassword новый пароль пользователя
+     * @throws RuntimeException если текущий пароль не указан, указан неверно
+     *                          или новый пароль короче 6 символов
+     */
+    @Transactional
+    public void changeUserPassword(User user, String oldPassword, String newPassword) {
+        if (newPassword == null || newPassword.isBlank()) {
+            return;
+        }
+
+        if (oldPassword == null || oldPassword.isBlank()) {
+            throw new RuntimeException("Введите текущий пароль");
+        }
+
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new RuntimeException("Текущий пароль указан неверно");
+        }
+
+        if (newPassword.length() < 6) {
+            throw new RuntimeException("Новый пароль должен быть минимум 6 символов");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
+
+    /**
+     * Изменяет выбранный язык интерфейса пользователя.
+     *
+     * <p>Значение сохраняется в поле {@code language} сущности пользователя
+     * и используется для восстановления локализации после перезапуска приложения
+     * или новой сессии.</p>
+     *
+     * @param user пользователь, для которого изменяется язык интерфейса
+     * @param lang код языка, например {@code ru} или {@code en}
+     */
+    @Transactional
+    public void changeLocalization(User user, String lang) {
+        user.setLanguage(lang);
+        userRepository.save(user);
+    }
+
+    /**
+     * Включает или выключает двухфакторную аутентификацию пользователя.
+     *
+     * @param user пользователь, для которого изменяется статус 2FA
+     * @param faStatus {@code true}, если двухфакторную аутентификацию нужно включить,
+     *                 {@code false}, если нужно выключить
+     */
+    @Transactional
+    public void change2FaStatus(User user, boolean faStatus) {
+        user.setFaStatus(faStatus);
         userRepository.save(user);
     }
 

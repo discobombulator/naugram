@@ -1,69 +1,86 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>NauGram - Чаты</title>
     <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f7f9fb;
-            margin: 0;
             display: flex;
             height: 100vh;
             overflow: hidden;
         }
 
+        /* ─── Сайдбар ─── */
         .sidebar {
-            width: 350px;
+            width: 33%;
+            min-width: 260px;
             background: white;
             border-right: 2px solid #f5833d33;
             display: flex;
             flex-direction: column;
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
         }
 
         .sidebar-header {
-            padding: 15px;
+            padding: 15px 15px 12px;
             border-bottom: 1px solid #eee;
         }
 
         .header-top {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 15px;
-            margin-bottom: 15px;
+            margin-bottom: 8px;
         }
 
-        .settings-btn {
+        .icon-btn {
             background: none;
             border: none;
             cursor: pointer;
             color: #f5833d;
-            font-size: 24px;
-            padding: 5px;
+            padding: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: transform 0.2s;
+            border-radius: 10px;
+            transition: background 0.2s, transform 0.2s;
+            text-decoration: none;
         }
 
-        .settings-btn:hover {
-            transform: rotate(45deg);
+        .icon-btn:hover {
+            background: #f5833d15;
         }
 
-        .search-wrapper {
-            position: relative;
+        .icon-btn.active {
+            background: #f5833d20;
+            outline: 1.5px solid #f5833d55;
+        }
+
+        .logo {
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+            color: #f5833d;
+            margin-bottom: 10px;
         }
 
         .search-input {
             width: 100%;
-            height: 45px;
+            height: 42px;
             background: #f1f1f1;
             border: 2px solid transparent;
             border-radius: 12px;
             padding: 0 15px;
-            box-sizing: border-box;
             outline: none;
+            font-size: 14px;
             transition: 0.3s;
+            color: #333;
         }
 
         .search-input:focus {
@@ -71,115 +88,501 @@
             background: white;
         }
 
-        /* Список чатов */
+        /* ─── Список чатов ─── */
         .chats-list {
             flex: 1;
             overflow-y: auto;
         }
+
+        .chats-list::-webkit-scrollbar { width: 5px; }
+        .chats-list::-webkit-scrollbar-thumb { background: #f5833d44; border-radius: 10px; }
 
         .chat-item {
             display: flex;
             align-items: center;
             padding: 12px 15px;
             cursor: pointer;
-            transition: 0.2s;
             border-bottom: 1px solid #f9f9f9;
+            transition: background 0.2s;
         }
 
-        .chat-item:hover {
-            background-color: #fff4ed;
-        }
+        .chat-item:hover { background: #fff4ed; }
+        .chat-item.active { background: #fff4ed; }
 
         .chat-avatar {
-            width: 55px;
-            height: 55px;
-            background-color: #f5833d;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
-            margin-right: 15px;
+            background: #f5833d;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
             font-weight: bold;
-            font-size: 20px;
+            font-size: 18px;
             flex-shrink: 0;
+            margin-right: 12px;
         }
 
-        .chat-info {
-            flex: 1;
-            overflow: hidden;
-        }
+        .chat-info { flex: 1; overflow: hidden; }
 
         .chat-name {
             font-weight: bold;
+            font-size: 14px;
             color: #333;
-            margin-bottom: 4px;
             display: flex;
             justify-content: space-between;
+            margin-bottom: 4px;
         }
 
-        .chat-time {
-            font-size: 12px;
-            color: #999;
-            font-weight: normal;
-        }
+        .chat-time { font-size: 11px; color: #aaa; font-weight: normal; }
 
         .chat-last-msg {
-            font-size: 14px;
-            color: #777;
+            font-size: 13px;
+            color: #888;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
+        /* ─── Выезжающие панели ─── */
+        .slide-panel {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            border-right: 2px solid #f5833d33;
+        }
+
+        /* Левая панель (настройки) */
+        .slide-panel.left {
+            transform: translateX(-100%);
+        }
+
+        .slide-panel.left.open {
+            transform: translateX(0);
+        }
+
+        /* Правая панель (профиль) */
+        .slide-panel.right {
+            left: 0;
+            transform: translateX(100%);
+            border-right: none;
+            border-left: 2px solid #f5833d33;
+        }
+
+        .slide-panel.right.open {
+            transform: translateX(0);
+        }
+
+        .panel-header {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Для левой панели (настройки): иконка слева, заголовок по центру */
+        .panel-header:not(.right-header) {
+            gap: 12px;
+        }
+
+        .panel-header:not(.right-header) .panel-title {
+            flex: 1;
+            text-align: center;
+        }
+
+        /* Для правой панели (профиль): пустой плейсхолдер слева, заголовок по центру, иконка справа */
+        .right-header {
+            gap: 12px;
+        }
+
+        .right-header .panel-title {
+            flex: 1;
+            text-align: center;
+        }
+
+        .right-header .spacer {
+            width: 34px;
+            flex-shrink: 0;
+        }
+
+        .panel-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #f5833d;
+        }
+
+        .panel-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .panel-body::-webkit-scrollbar { width: 5px; }
+        .panel-body::-webkit-scrollbar-thumb { background: #f5833d44; border-radius: 10px; }
+
+        /* ─── Элементы форм в панелях ─── */
+        .section-label {
+            font-size: 11px;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 16px 0 8px 4px;
+        }
+
+        .section-label:first-child { margin-top: 4px; }
+
+        .panel-input,
+        .panel-select {
+            width: 100%;
+            height: 50px;
+            padding: 0 16px;
+            font-size: 15px;
+            border: 2px solid #f5833d44;
+            border-radius: 12px;
+            outline: none;
+            background: white;
+            color: #333;
+            margin-bottom: 10px;
+            transition: border-color 0.2s;
+            font-family: inherit;
+        }
+
+        .panel-input:focus,
+        .panel-select:focus {
+            border-color: #f5833d;
+        }
+
+        .panel-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5833d' stroke-width='2'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            background-size: 16px;
+            cursor: pointer;
+        }
+
+        .save-btn {
+            width: 100%;
+            height: 52px;
+            background: #f5833d;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: background 0.2s;
+            font-family: inherit;
+        }
+
+        .save-btn:hover { background: #d96d2e; }
+
+        .logout-btn {
+            display: block;
+            width: 100%;
+            text-align: center;
+            margin-top: 14px;
+            padding: 12px;
+            color: #ff4d4d;
+            font-weight: bold;
+            font-size: 14px;
+            background: none;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.2s;
+        }
+
+        .logout-btn:hover { background: #ff4d4d15; }
+
+        /* ─── Редактор профиля — аватар ─── */
+        .avatar-editor {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px 0 16px;
+            gap: 8px;
+        }
+
+        .avatar-big {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #f5833d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 30px;
+            font-weight: bold;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .avatar-edit-icon {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 26px;
+            height: 26px;
+            background: white;
+            border: 2px solid #f5833d33;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .avatar-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .avatar-email {
+            font-size: 13px;
+            color: #aaa;
+        }
+
+        /* ─── Основной контент ─── */
         .main-content {
             flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            background-color: #f7f9fb;
-            position: relative;
+            background: #f7f9fb;
         }
 
         .welcome-msg {
             text-align: center;
             background: white;
-            padding: 40px;
+            padding: 40px 50px;
             border-radius: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            border: 1px solid #f5833d33;
+            border: 1px solid #f5833d22;
+            box-shadow: 0 4px 20px rgba(245, 131, 61, 0.06);
         }
 
         .welcome-msg h2 {
             color: #f5833d;
-            margin-top: 0;
+            margin-bottom: 8px;
         }
 
-        /* Скроллбар в оранжевом стиле */
-        .chats-list::-webkit-scrollbar {
-            width: 6px;
+        .welcome-msg p { color: #aaa; font-size: 15px; }
+
+        /* ─── Уведомления ─── */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 14px 22px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: bold;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
         }
-        .chats-list::-webkit-scrollbar-thumb {
-            background: #f5833d55;
-            border-radius: 10px;
+
+        .notification.error { background: #ff4d4d; color: white; }
+        .notification.success { background: #4caf50; color: white; }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 14px 22px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: bold;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 8px 0 14px;
+            color: #333;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .checkbox-row input {
+            width: 18px;
+            height: 18px;
+            accent-color: #f5833d;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
 
+<!-- ─── Уведомления ─── -->
+<div th:if="${error}" class="notification error" th:text="${error}"></div>
+<div th:if="${success}" class="notification success" th:text="${success}"></div>
+
+<!-- ─── Сайдбар ─── -->
 <div class="sidebar">
-    <div class="sidebar-header">
-        <div class="header-top">
-            <a href="/settings" class="settings-btn" title="Настройки">
+
+    <!-- Панель настроек (выезжает слева) -->
+    <div class="slide-panel left" id="settingsPanel">
+        <div class="panel-header">
+            <button class="icon-btn" onclick="closePanel('settings')">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-            </a>
-            <div style="color: #f5833d; font-weight: bold; font-size: 20px;">NauGram</div>
+            </button>
+            <span class="panel-title" th:text="#{settings.title}">Настройки</span>
         </div>
-        <div class="search-wrapper">
-            <input type="text" class="search-input" placeholder="Поиск чатов...">
+        <div class="panel-body">
+            <form action="/save-settings" method="POST">
+                <div class="section-label" th:text="#{settings.interface}">Интерфейс</div>
+
+                <select name="language" class="panel-select">
+                    <option value="ru"
+                            th:selected="${currentLanguage == 'ru'}"
+                            th:text="#{settings.language.ru}">
+                        Русский
+                    </option>
+                    <option value="en"
+                            th:selected="${currentLanguage == 'en'}"
+                            th:text="#{settings.language.en}">
+                        English
+                    </option>
+                </select>
+
+                <div class="section-label" th:text="#{settings.security}">Безопасность</div>
+
+                <input type="password"
+                       name="oldPassword"
+                       class="panel-input"
+                       th:placeholder="#{settings.oldPassword}">
+
+                <input type="password"
+                       name="newPassword"
+                       class="panel-input"
+                       th:placeholder="#{settings.newPassword}">
+
+                <label class="checkbox-row">
+                    <input type="checkbox"
+                           name="faStatus"
+                           value="true"
+                           th:checked="${currentUser != null && currentUser.faStatus}">
+                    <span th:text="#{settings.twoFactor}">Включить двухфакторную аутентификацию</span>
+                </label>
+
+                <button type="submit" class="save-btn" th:text="#{button.saveChanges}">
+                    Сохранить изменения
+                </button>
+            </form>
+            <form action="/logout" method="POST">
+                <button type="submit" class="logout-btn" th:text="#{button.logout}">
+                    Выйти из аккаунта
+                </button>
+            </form>
         </div>
     </div>
 
+    <!-- Панель профиля (выезжает справа) -->
+    <div class="slide-panel right" id="profilePanel">
+        <div class="panel-header right-header">
+            <div class="spacer"></div>
+            <span class="panel-title" th:text="#{profile.title}">Профиль</span>
+            <button class="icon-btn" onclick="closePanel('profile')">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            </button>
+        </div>
+        <div class="panel-body">
+            <form action="/save-profile" method="POST">
+                <div class="avatar-editor">
+                    <div class="avatar-big">
+                        И
+                        <div class="avatar-edit-icon">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f5833d" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        </div>
+                    </div>
+                    <div class="avatar-name"
+                         th:text="${profile != null && profile.realName != null && !profile.realName.isBlank() ? profile.realName : currentUser.username}">
+                        Ваше имя
+                    </div>
+
+                    <div class="avatar-email"
+                         th:text="${currentUser != null ? '@' + currentUser.username : '@username'}">
+                        @username
+                    </div>
+                </div>
+
+                <div class="section-label" th:text="#{profile.main}">Основное</div>
+
+                <input type="text"
+                       name="firstName"
+                       class="panel-input"
+                       th:placeholder="#{profile.firstName}"
+                       th:value="${firstName}">
+
+                <input type="text"
+                       name="lastName"
+                       class="panel-input"
+                       th:placeholder="#{profile.lastName}"
+                       th:value="${lastName}">
+
+                <input type="date"
+                       name="birthDate"
+                       class="panel-input"
+                       th:value="${profile != null && profile.birthDate != null ? profile.birthDate : ''}">
+
+                <input type="text"
+                       name="username"
+                       class="panel-input"
+                       placeholder="@username"
+                       th:value="${currentUser != null ? '@' + currentUser.username : ''}">
+
+                <div class="section-label" th:text="#{profile.about}">О себе</div>
+
+                <input type="text"
+                       name="bio"
+                       class="panel-input"
+                       th:placeholder="#{profile.bio}"
+                       th:value="${profile != null ? profile.description : ''}">
+
+                <button type="submit" class="save-btn" th:text="#{button.saveChanges}">
+                    Сохранить изменения
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Хедер сайдбара -->
+    <div class="sidebar-header">
+        <div class="header-top">
+            <button class="icon-btn" id="settingsBtn" onclick="togglePanel('settings')" title="Настройки">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            </button>
+            <button class="icon-btn" id="profileBtn" onclick="togglePanel('profile')" title="Профиль">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            </button>
+        </div>
+
+        <div class="logo">NauGram</div>
+        <input type="text"
+               class="search-input"
+               th:placeholder="#{chat.search}">
+    </div>
+
+    <!-- Список чатов -->
     <div class="chats-list">
         <div class="chat-item">
             <div class="chat-avatar">И</div>
@@ -188,25 +591,72 @@
                 <div class="chat-last-msg">Привет! Как там проект?</div>
             </div>
         </div>
-
         <div class="chat-item">
-            <div class="chat-avatar" style="background-color: #5dacee;">Л</div>
+            <div class="chat-avatar" style="background:#5dacee">Л</div>
             <div class="chat-info">
-                <div class="chat-name">Леонид Додепович<span class="chat-time">12:05</span></div>
+                <div class="chat-name">Леонид Доделович <span class="chat-time">12:05</span></div>
                 <div class="chat-last-msg">Завтра на вайп залетаем</div>
             </div>
         </div>
-        </div>
     </div>
 </div>
 
+<!-- ─── Основной контент ─── -->
 <div class="main-content">
     <div class="welcome-msg">
-        <div style="font-size: 50px; margin-bottom: 15px;">👋</div>
-        <h2>Добро пожаловать в NauGram</h2>
-        <p style="color: #777;">Выберите чат, чтобы начать общение</p>
+        <div style="font-size: 52px; margin-bottom: 16px;">👋</div>
+        <h2 th:text="#{welcome.title}">Добро пожаловать в NauGram</h2>
+        <p th:text="#{welcome.subtitle}">Выберите чат, чтобы начать общение</p>
     </div>
 </div>
+
+<script>
+    function togglePanel(type) {
+        const sp = document.getElementById('settingsPanel');
+        const pp = document.getElementById('profilePanel');
+        const sb = document.getElementById('settingsBtn');
+        const pb = document.getElementById('profileBtn');
+
+        if (type === 'settings') {
+            const isOpen = sp.classList.contains('open');
+            sp.classList.toggle('open', !isOpen);
+            pp.classList.remove('open');
+            sb.classList.toggle('active', !isOpen);
+            pb.classList.remove('active');
+        } else {
+            const isOpen = pp.classList.contains('open');
+            pp.classList.toggle('open', !isOpen);
+            sp.classList.remove('open');
+            pb.classList.toggle('active', !isOpen);
+            sb.classList.remove('active');
+        }
+    }
+
+    function closePanel(type) {
+        if (type === 'settings') {
+            document.getElementById('settingsPanel').classList.remove('open');
+            document.getElementById('settingsBtn').classList.remove('active');
+        } else {
+            document.getElementById('profilePanel').classList.remove('open');
+            document.getElementById('profileBtn').classList.remove('active');
+        }
+    }
+
+
+</script>
+
+<script>
+    setTimeout(() => {
+        document.querySelectorAll('.notification').forEach(notification => {
+            notification.style.opacity = '0';
+            notification.style.transform = 'translateY(-10px)';
+
+            setTimeout(() => {
+                notification.remove();
+            }, 300);
+        });
+    }, 5000);
+</script>
 
 </body>
 </html>
