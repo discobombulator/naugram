@@ -1,15 +1,12 @@
 package something.ru.NauGram.model;
 
 import jakarta.persistence.*;
-import something.ru.NauGram.model.User;
+import lombok.Data;
 
-import java.security.Timestamp;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
 
 @Entity
+@Data
 public class VerificationToken {
     public static final int EXPIRATION = 15;
 
@@ -24,27 +21,4 @@ public class VerificationToken {
     private User user;
 
     private Date expiryDate;
-
-    public String getToken() {
-        return token;
-    }
-    public Date getExpiryDate() {
-        return expiryDate;
-    }
-    public User getUser() {
-        return user;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public void setExpiryDate(Date expiryDate) {
-        this.expiryDate = expiryDate;
-    }
-
 }
