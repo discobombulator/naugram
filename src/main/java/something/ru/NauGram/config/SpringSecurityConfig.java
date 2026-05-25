@@ -44,36 +44,38 @@ public class SpringSecurityConfig{
                                 "/v3/api-docs/**"
                         ).hasRole("ADMIN")
 
-                        .requestMatchers("/chats/**", "/api/**").authenticated()
+                        .requestMatchers("/api/**").authenticated()
 
                         .anyRequest().authenticated()
                 )
-//                .formLogin(form -> form
-//                        .loginPage("/login")
-//                        .loginProcessingUrl("/login")
-//                        .defaultSuccessUrl("/chats", true)
-//                        .permitAll()
-//                )
+
                 .formLogin(form -> form
-                        .loginPage("/login") // Ссылка, по которой открывается страница входа
-                        .loginProcessingUrl("/login") // URL, на который форма отправляет POST
+                        .loginPage("/login")
+                        .loginProcessingUrl("/login")
+                        .permitAll()
                         .successHandler((request, response, authentication) -> {
                             try {
-                                HttpSession session = request.getSession();
-                                session.setAttribute("pendingName", authentication.getName());
                                 User user = userService.findByUsername(authentication.getName());
-                                verificationTokenService.deleteOldToken(user);
-                                verificationTokenService.generateNewToken(user);
-                                response.sendRedirect("/verify-login");
+
+                                if (user != null && Boolean.TRUE.equals(user.getFaStatus())) {
+                                    HttpSession session = request.getSession();
+                                    session.setAttribute("pendingName", authentication.getName());
+
+                                    verificationTokenService.deleteOldToken(user);
+                                    verificationTokenService.generateNewToken(user);
+
+                                    response.sendRedirect("/verify-login");
+                                    return;
+                                }
+
+                                response.sendRedirect("/");
                             } catch (MessagingException e) {
                                 response.sendRedirect("/login?error");
                             }
                         })
                         .failureHandler((request, response, exception) -> {
-                            // Неверный логин/пароль
                             response.sendRedirect("/login?error=bad_credentials");
                         })
-                        .permitAll()
                 )
                 .rememberMe(remember -> remember
                         .key("naugramSecretKey")
