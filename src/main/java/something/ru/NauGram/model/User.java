@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Сущность пользователя системы.
@@ -23,28 +24,24 @@ public class User {
     @Column(unique = true, nullable = false)
     private String username;
 
-    private String realName;
-
-    private LocalDate birthDate;
-
     private LocalDateTime createdAt;
-
-    private String profileImagePath;
 
     private String password;
 
     private String email;
 
+    private String language;
+
+    private Boolean faStatus;
+
     @Enumerated(EnumType.STRING)
     private UserRole role;
 
-    @Column(name = "enabled")
-    private boolean enabled;
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    private List<ChatParticipant> chatParticipants;
 
-    public User() {
-        super();
-        this.enabled = false;
-    }
+    @OneToMany(mappedBy = "sender", fetch = FetchType.LAZY)
+    private List<Message> messages;
 
     @Column(name = "enabled")
     private boolean enabled;
@@ -52,10 +49,13 @@ public class User {
     public User() {
         super();
         this.enabled=false;
+        this.faStatus = false;
+        this.language = "ru";
     }
 
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
     }
+
 }

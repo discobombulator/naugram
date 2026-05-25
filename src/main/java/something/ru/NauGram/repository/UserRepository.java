@@ -18,10 +18,17 @@ public interface UserRepository extends CrudRepository<User, Long> {
     /** Находит пользователя по email (для авторизации) */
     User findByEmail(String email);
 
-    @NonNull Optional<User> findById(@NonNull Long id);
-
+    /**
+     * Активирует аккаунт пользователя по email.
+     *
+     * <p>Устанавливает значение поля {@code enabled} в {@code true}
+     * для пользователя с указанным email.</p>
+     *
+     * @param email email пользователя, аккаунт которого необходимо активировать
+     */
     @Modifying
     @Transactional
     @Query("UPDATE User u SET u.enabled = true WHERE u.email = :email")
     void enableUser(@Param("email") String email);
+
 }
