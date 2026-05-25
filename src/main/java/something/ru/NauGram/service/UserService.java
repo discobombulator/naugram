@@ -27,6 +27,8 @@ import java.util.Optional;
 public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
+
+    private final UserProfileService userProfileService;
     private final PasswordEncoder passwordEncoder;
 
     /**
@@ -35,9 +37,10 @@ public class UserService implements UserDetailsService {
      * @param userRepository  репозиторий для работы с пользователями в БД
      * @param passwordEncoder энкодер для хэширования паролей
      */
-    public UserService(UserRepository userRepository,
+    public UserService(UserRepository userRepository, UserProfileService userProfileService,
                        PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.userProfileService = userProfileService;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -63,6 +66,8 @@ public class UserService implements UserDetailsService {
         user.setUsername(email.substring(0, email.indexOf("@")));
 
         userRepository.save(user);
+
+        userProfileService.createUsersProfile(user);
     }
     /**
      * Изменяет пароль пользователя.
