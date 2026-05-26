@@ -42,21 +42,11 @@ public class ChatController {
      * Отображает страницу со списком всех чатов текущего пользователя.
      * Добавляет в модель список чатов и их количество для отображения на странице.
      *
-     * @param model объект модели для передачи данных в представление
      * @return имя шаблона представления "chat"
      */
     @GetMapping("/chats")
-    public String chatsPage(Model model) {
-
-        User currentUser = userService.getCurrentUser();
-
-        List<Chat> chats =
-                chatService.getCurrentUserChats(currentUser);
-
-        model.addAttribute("chats", chats);
-        model.addAttribute("chatCount", chats.size());
-
-        return "chat";
+    public String chatsPage() {
+        return "redirect:/";
     }
 
     /**
@@ -72,29 +62,22 @@ public class ChatController {
      * @throws AccessDeniedException если текущий пользователь не является участником чата
      */
     @GetMapping("/chats/{chatId}")
-    public String chatPage(
-            @PathVariable Long chatId,
-            Model model
-    ) {
-
+    public String chatPage(@PathVariable Long chatId, Model model) {
         User currentUser = userService.getCurrentUser();
 
         boolean allowed = chatParticipantService.isParticipant(chatId, currentUser.getId());
 
         if (!allowed) {
-            throw new AccessDeniedException(
-                    "You do not have access to this chat"
-            );
+            throw new AccessDeniedException("You do not have access to this chat");
         }
 
         Chat chat = chatService.getChat(chatId);
 
-        List<Chat> chats = chatService.getCurrentUserChats(currentUser);
-
         model.addAttribute("selectedChat", chat);
-        model.addAttribute("chats", chats);
-        model.addAttribute("chatCount", chats.size());
         model.addAttribute("messages", messageService.getInitialMessages(chat.getId()));
+        model.addAttribute("currentUser", currentUser);
+        model.addAttribute("currentUserId", currentUser.getId());
+        model.addAttribute("currentUsername", currentUser.getUsername());
 
         return "chat";
     }
@@ -113,26 +96,32 @@ public class ChatController {
      */
     @Transactional
     @MessageMapping("/chat.send")
-    public void sendMessage(
-            MessageDTO dto,
-            Principal principal
-    ) {
-
+    public void sendMessage(MessageDTO dto, Principal principal) {
         if (principal == null) {
             throw new RuntimeException("Unauthorized");
         }
+
         User sender = userService.findByUsername(principal.getName());
+
+        if (sender == null) {
+            sender = userService.findByEmail(principal.getName());
+        }
+
+        if (sender == null) {
+            throw new RuntimeException("Пользователь не найден: " + principal.getName());
+        }
 
         boolean allowed = chatParticipantService.isParticipant(dto.getChatId(), sender.getId());
 
         if (!allowed) {
-            throw new AccessDeniedException(
-                    "You are not participant of this chat"
-            );
+            throw new AccessDeniedException("You are not participant of this chat");
         }
+
         Chat chat = chatService.getChat(dto.getChatId());
+
         Message savedMessage = messageService.saveMessage(chat, sender, null, dto.getText());
         MessageDTO response = savedMessage.toMessageDTO();
+
         List<User> users = chatService.getChatParticipants(chat.getId());
 
         for (User user : users) {

@@ -20,7 +20,7 @@ import java.util.List;
 @Service
 public class MessageService {
     /** Количество последних сообщений, возвращаемых при начальной загрузке чата */
-    private final int MESSAGE_NUMBER = 5;
+    private final int MESSAGE_NUMBER = 50;
 
     private final MessageRepository messageRepository;
 

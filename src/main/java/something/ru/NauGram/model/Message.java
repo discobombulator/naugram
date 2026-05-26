@@ -50,6 +50,7 @@ public class Message {
         MessageDTO m = new MessageDTO();
         m.setText(messageText);
         m.setSender(sender.getUsername());
+        m.setSenderId(sender.getId());
         m.setChatId(chat.getId());
         m.setTimestamp(String.valueOf(createdAt));
         return m;
