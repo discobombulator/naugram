@@ -11,11 +11,14 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import something.ru.NauGram.dto.UserSearchDTO;
 import something.ru.NauGram.model.User;
 import something.ru.NauGram.model.UserRole;
 import something.ru.NauGram.repository.UserRepository;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -69,6 +72,7 @@ public class UserService implements UserDetailsService {
 
         userProfileService.createUsersProfile(user);
     }
+
     /**
      * Изменяет пароль пользователя.
      *
@@ -76,7 +80,7 @@ public class UserService implements UserDetailsService {
      * указан, метод проверяет наличие текущего пароля, сверяет его с сохранённым
      * хэшем и проверяет минимальную длину нового пароля.</p>
      *
-     * @param user пользователь, которому необходимо изменить пароль
+     * @param user        пользователь, которому необходимо изменить пароль
      * @param oldPassword текущий пароль пользователя
      * @param newPassword новый пароль пользователя
      * @throws RuntimeException если текущий пароль не указан, указан неверно
@@ -123,7 +127,7 @@ public class UserService implements UserDetailsService {
     /**
      * Включает или выключает двухфакторную аутентификацию пользователя.
      *
-     * @param user пользователь, для которого изменяется статус 2FA
+     * @param user     пользователь, для которого изменяется статус 2FA
      * @param faStatus {@code true}, если двухфакторную аутентификацию нужно включить,
      *                 {@code false}, если нужно выключить
      */
@@ -193,12 +197,12 @@ public class UserService implements UserDetailsService {
      * </ul>
      *
      * @return текущий аутентифицированный пользователь или {@code null}, если:
-     *         <ul>
-     *             <li>отсутствует контекст аутентификации</li>
-     *             <li>пользователь не аутентифицирован</li>
-     *             <li>пользователь является анонимным</li>
-     *             <li>пользователь не найден в базе данных</li>
-     *         </ul>
+     * <ul>
+     *     <li>отсутствует контекст аутентификации</li>
+     *     <li>пользователь не аутентифицирован</li>
+     *     <li>пользователь является анонимным</li>
+     *     <li>пользователь не найден в базе данных</li>
+     * </ul>
      */
     public User getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -224,5 +228,22 @@ public class UserService implements UserDetailsService {
 
         String email = auth.getName();
         return findByEmail(email);
+    }
+
+    public List<UserSearchDTO> searchUsers(String query) {
+
+        if (query == null || query.isBlank()) {
+            return Collections.emptyList();
+        }
+
+        return userRepository
+                .findTop10ByUsernameContainingIgnoreCase(query)
+                .stream()
+                .filter(user -> !Objects.equals(user.getId(), getCurrentUser().getId()))
+                .map(user -> new UserSearchDTO(
+                        user.getId(),
+                        user.getUsername()
+                ))
+                .toList();
     }
 }

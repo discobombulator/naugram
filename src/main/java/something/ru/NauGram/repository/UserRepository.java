@@ -7,6 +7,8 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 import something.ru.NauGram.model.User;
 
+import java.util.List;
+
 public interface UserRepository extends CrudRepository<User, Long> {
 
     /** Находит пользователей по имени */
@@ -28,4 +30,5 @@ public interface UserRepository extends CrudRepository<User, Long> {
     @Query("UPDATE User u SET u.enabled = true WHERE u.email = :email")
     void enableUser(@Param("email") String email);
 
+    List<User> findTop10ByUsernameContainingIgnoreCase(String username);
 }

@@ -3,8 +3,11 @@ package something.ru.NauGram.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import something.ru.NauGram.dto.CreateChatDTO;
 import something.ru.NauGram.model.Chat;
 import something.ru.NauGram.model.ChatParticipant;
+import something.ru.NauGram.model.ParticipantRole;
 import something.ru.NauGram.model.User;
 import something.ru.NauGram.repository.ChatParticipantRepository;
 import something.ru.NauGram.repository.ChatRepository;
@@ -50,7 +53,7 @@ public class ChatService {
      *
      * @param user пользователь, для которого необходимо получить список чатов
      * @return список чатов, в которых пользователь является участником,
-     *         или пустой список, если пользователь не участвует ни в одном чате
+     * или пустой список, если пользователь не участвует ни в одном чате
      */
     public List<Chat> getCurrentUserChats(User user) {
         return chatRepository.findByUser(user);
@@ -82,10 +85,40 @@ public class ChatService {
      *
      * @param chatId идентификатор чата, для которого необходимо получить участников
      * @return список пользователей, являющихся участниками указанного чата,
-     *         или пустой список, если чат не имеет участников
+     * или пустой список, если чат не имеет участников
      */
-    public List<User> getChatParticipants(long chatId){
+    public List<User> getChatParticipants(long chatId) {
         return chatParticipantRepository.findByChatId(chatId).stream()
                 .map(ChatParticipant::getUser).toList();
+    }
+
+    @Transactional
+    public Long createChat(CreateChatDTO request, User userCreatedChat) {
+        Chat chat = new Chat();
+        chat.setChatName(request.getChatName());
+        chat.setChatType("group");
+        chat.setDescription(request.getDescription());
+        chatRepository.save(chat);
+
+        for (var id : request.getUserIds()) {
+            Optional<User> optionalU = userRepository.findById(id);
+            if (optionalU.isEmpty()) {
+                continue;
+            }
+            User user = optionalU.get();
+            ChatParticipant cp = new ChatParticipant(
+                    chat,
+                    user,
+                    ParticipantRole.USER);
+            chatParticipantRepository.save(cp);
+        }
+
+        ChatParticipant cp = new ChatParticipant(
+                chat,
+                userCreatedChat,
+                ParticipantRole.OWNER);
+        chatParticipantRepository.save(cp);
+
+        return chat.getId();
     }
 }
