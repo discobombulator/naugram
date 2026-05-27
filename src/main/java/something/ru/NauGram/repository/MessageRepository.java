@@ -21,4 +21,6 @@ public interface MessageRepository extends CrudRepository<Message, Long> {
      */
     @Query("SELECT m FROM Message m WHERE m.chat.id = :chatId ORDER BY m.id DESC")
     List<Message> findLastMessagesByChatId(@Param("chatId") Long chatId, PageRequest pageable);
+
+    List<Message> findTop50ByChatIdOrderByCreatedAtAsc(Long chatId);
 }

@@ -54,7 +54,7 @@ public class SpringSecurityConfig{
                         .permitAll()
                         .successHandler((request, response, authentication) -> {
                             try {
-                                User user = userService.findByUsername(authentication.getName());
+                                User user = userService.findByEmail(authentication.getName());
 
                                 if (user != null && Boolean.TRUE.equals(user.getFaStatus())) {
                                     HttpSession session = request.getSession();

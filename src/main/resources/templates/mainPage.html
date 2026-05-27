@@ -428,6 +428,17 @@
             accent-color: #f5833d;
             cursor: pointer;
         }
+        .chat-link {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .empty-chats {
+            padding: 24px 16px;
+            text-align: center;
+            color: #aaa;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -584,20 +595,46 @@
 
     <!-- Список чатов -->
     <div class="chats-list">
-        <div class="chat-item">
-            <div class="chat-avatar">И</div>
-            <div class="chat-info">
-                <div class="chat-name">Иван Куштанов <span class="chat-time">14:20</span></div>
-                <div class="chat-last-msg">Привет! Как там проект?</div>
+
+        <a th:each="chat : ${chats}"
+           class="chat-item chat-link"
+           th:href="@{/chats/{id}(id=${chat.id})}">
+
+            <div class="chat-avatar"
+                 th:text="${chat.chatName != null && !chat.chatName.isBlank()
+                ? #strings.substring(chat.chatName, 0, 1).toUpperCase()
+                : 'Ч'}">
+                Ч
             </div>
-        </div>
-        <div class="chat-item">
-            <div class="chat-avatar" style="background:#5dacee">Л</div>
+
             <div class="chat-info">
-                <div class="chat-name">Леонид Доделович <span class="chat-time">12:05</span></div>
-                <div class="chat-last-msg">Завтра на вайп залетаем</div>
+                <div class="chat-name">
+                <span th:text="${chat.chatName != null && !chat.chatName.isBlank()
+                    ? chat.chatName
+                    : 'Чат #' + chat.id}">
+                    Название чата
+                </span>
+
+                    <span class="chat-time"
+                          th:text="${chat.createdAt != null
+                        ? #temporals.format(chat.createdAt, 'HH:mm')
+                        : ''}">
+                    14:20
+                </span>
+                </div>
+
+                <div class="chat-last-msg">
+                <span th:text="${chat.chatType == 'direct' ? 'Личный чат' : 'Групповой чат'}">
+                    Тип чата
+                </span>
+                </div>
             </div>
+        </a>
+
+        <div th:if="${chats == null || #lists.isEmpty(chats)}" class="empty-chats">
+            У вас пока нет чатов
         </div>
+
     </div>
 </div>
 

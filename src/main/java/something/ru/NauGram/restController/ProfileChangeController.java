@@ -58,7 +58,7 @@ public class ProfileChangeController {
                               Authentication authentication,
                               RedirectAttributes redirectAttributes) {
         try {
-            User currentUser = userService.findByUsername(authentication.getName());
+            User currentUser = userService.findByEmail(authentication.getName());
 
             userProfileService.updateProfile(
                     currentUser,

@@ -1,145 +1,368 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>NauGram - Chats</title>
+    <title>NauGram - Chat</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f7f9fb;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-page-header {
+            height: 64px;
+            background: white;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            padding: 0 18px;
+            gap: 14px;
+            flex-shrink: 0;
+        }
+
+        .back-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 12px;
+            background: #fff4ed;
+            color: #f5833d;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        .back-btn:hover {
+            background: #f5833d22;
+            transform: translateX(-2px);
+        }
+
+        .chat-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #f5833d;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .chat-header-info {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-title {
+            color: #333;
+            font-size: 17px;
+            font-weight: bold;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chat-subtitle {
+            color: #aaa;
+            font-size: 13px;
+            margin-top: 2px;
+        }
+
+        .chat-layout {
+            flex: 1;
+            overflow: hidden;
+            background: #f7f9fb;
+        }
+
+        .chat-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            background: #f7f9fb;
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 28px 12%;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .messages-container::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb {
+            background: #f5833d44;
+            border-radius: 10px;
+        }
+
+        .message-row {
+            display: flex;
+            width: 100%;
+        }
+
+        .message-row.received {
+            justify-content: flex-start;
+        }
+
+        .message-row.sent {
+            justify-content: flex-end;
+        }
+
+        .message-bubble {
+            max-width: 420px;
+            padding: 11px 14px;
+            border-radius: 16px;
+            font-size: 14px;
+            line-height: 1.4;
+            word-break: break-word;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+        }
+
+        .message-row.received .message-bubble {
+            background: white;
+            color: #222;
+            border: 1px solid #eee;
+            border-bottom-left-radius: 5px;
+        }
+
+        .message-row.sent .message-bubble {
+            background: #f5833d;
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message-sender {
+            font-size: 12px;
+            font-weight: 700;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .message-text {
+            white-space: pre-wrap;
+        }
+
+        .message-time {
+            margin-top: 6px;
+            font-size: 11px;
+            opacity: 0.75;
+            text-align: right;
+        }
+
+        .chat-input-area {
+            background: white;
+            border-top: 1px solid #eee;
+            padding: 14px 12%;
+            display: flex;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .message-input {
+            flex: 1;
+            height: 46px;
+            border: 2px solid #f5833d33;
+            border-radius: 14px;
+            outline: none;
+            padding: 0 15px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        .message-input:focus {
+            border-color: #f5833d;
+        }
+
+        .send-btn {
+            min-width: 120px;
+            height: 46px;
+            border: none;
+            border-radius: 14px;
+            background: #f5833d;
+            color: white;
+            font-weight: bold;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-family: inherit;
+        }
+
+        .send-btn:hover {
+            background: #d96d2e;
+        }
+
+        .empty-chat {
+            margin: auto;
+            color: #aaa;
+            text-align: center;
+            font-size: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .chat-page-header {
+                padding: 0 10px;
+                gap: 10px;
+            }
+
+            .messages-container {
+                padding: 18px 12px;
+            }
+
+            .chat-input-area {
+                padding: 12px;
+            }
+
+            .message-bubble {
+                max-width: 78%;
+            }
+
+            .send-btn {
+                min-width: 90px;
+            }
+        }
+    </style>
 </head>
+
 <body>
-<!-- Sidebar with chat list -->
-<div class="sidebar">
-    <div class="chats-list">
-        <!-- Iterate over chats with onclick redirect -->
-        <div th:each="chat : ${chats}"
-             class="chat-item"
-             th:onclick="'window.location.href=\'/chats/' + ${chat.id} + '\''">
-            <div class="chat-avatar">
-                <span th:text="${chat.chatName != null ? #strings.substring(chat.chatName, 0, 1) : '?'}">?</span>
-            </div>
-            <div class="chat-info">
-                <div class="chat-name">
-                    <span th:text="${chat.chatName != null ? chat.chatName : 'Unnamed Chat'}">Chat Name</span>
-                </div>
-                <div class="chat-last-msg">
-                    ID: <span th:text="${chat.id}">1</span> | Type: <span th:text="${chat.chatType}">type</span>
-                </div>
-            </div>
-        </div>
 
-        <!-- Show message when no chats -->
-        <div th:if="${#lists.isEmpty(chats)}">
-            No chats available
-        </div>
-    </div>
-</div>
+<header class="chat-page-header">
+    <button class="back-btn" onclick="window.location.href='/'">←</button>
 
-<!-- Main content area -->
-<div class="main-content">
-    <!-- Welcome message - visible when no chat is selected -->
-    <div id="welcomeMessage" th:if="${selectedChat == null}">
-        <h2>Welcome to NauGram</h2>
-        <p>Select a chat to start messaging</p>
-        <p>Total chats: <span th:text="${chatCount}">0</span></p>
+    <div class="chat-avatar"
+         th:text="${selectedChat.chatName != null && !selectedChat.chatName.isBlank()
+            ? #strings.substring(selectedChat.chatName, 0, 1).toUpperCase()
+            : 'Ч'}">
+        Ч
     </div>
 
-    <!-- Chat window - visible when chat is selected -->
-    <div id="chatWindow" th:if="${selectedChat != null}">
-        <!-- Chat Header -->
-        <div class="chat-header">
-            <button onclick="window.location.href='/chats'">← Back</button>
-            <div class="chat-avatar">
-                <span th:text="${selectedChat.chatName != null ? #strings.substring(selectedChat.chatName, 0, 1) : '?'}">?</span>
-            </div>
-            <div>
-                <h3 th:text="${selectedChat.chatName != null ? selectedChat.chatName : 'Unnamed Chat'}">Chat Name</h3>
-                <p>
-                    ID: <span th:text="${selectedChat.id}">1</span> |
-                    Type: <span th:text="${selectedChat.chatType}">type</span>
-                </p>
-            </div>
+    <div class="chat-header-info">
+        <div class="chat-title"
+             th:text="${selectedChat.chatName != null && !selectedChat.chatName.isBlank()
+                ? selectedChat.chatName
+                : 'Чат #' + selectedChat.id}">
+            Название чата
         </div>
 
-        <!-- Messages Area -->
-        <div id="messagesContainer">
-
-        </div>
-
-        <!-- Message Input Area -->
-        <div>
-            <input id="messageInput" type="text" placeholder="Type a message...">
-            <button th:onclick="sendMessage()">Send</button>
+        <div class="chat-subtitle">
+            <span th:text="${selectedChat.chatType == 'direct' ? 'Личный чат' : 'Групповой чат'}">
+                Тип чата
+            </span>
         </div>
     </div>
-</div>
+</header>
+
+<main class="chat-layout">
+    <div class="chat-container">
+
+        <div id="messagesContainer" class="messages-container">
+            <div th:if="${messages == null || #lists.isEmpty(messages)}"
+                 class="empty-chat"
+                 id="emptyChat">
+                Сообщений пока нет
+            </div>
+        </div>
+
+        <div class="chat-input-area">
+            <input id="messageInput"
+                   class="message-input"
+                   type="text"
+                   placeholder="Введите сообщение...">
+
+            <button class="send-btn" onclick="sendMessage()">Отправить</button>
+        </div>
+
+    </div>
+</main>
 
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 
 <script th:inline="javascript">
-
-    const initialMessages =
-        /*[[${messages}]]*/ [];
-
-    for (let m of initialMessages){
-        displayMessage(m)
-    }
+    const initialMessages = /*[[${messages}]]*/ [];
+    const currentChatId = /*[[${selectedChat != null ? selectedChat.id : null}]]*/ null;
+    const currentUserId = /*[[${currentUserId}]]*/ null;
 
     let stompClient = null;
 
-    // Current selected chat id from thymeleaf
-    const currentChatId = /*[[${selectedChat != null ? selectedChat.id : null}]]*/ null;
+    document.addEventListener("DOMContentLoaded", function () {
+        for (let message of initialMessages) {
+            displayMessage(message);
+        }
+
+        connect();
+
+        const input = document.getElementById("messageInput");
+
+        if (input) {
+            input.addEventListener("keypress", function (event) {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    sendMessage();
+                }
+            });
+        }
+    });
 
     function connect() {
-
         const socket = new SockJS('/ws');
-
         stompClient = Stomp.over(socket);
 
-        stompClient.connect({}, function (frame) {
-
-            console.log("Connected: " + frame);
-
-            // Subscribe only if chat page is opened
+        stompClient.connect({}, function () {
             if (currentChatId !== null) {
                 subscribeToChat(currentChatId);
             }
-
         }, function (error) {
             console.error("STOMP error:", error);
         });
     }
 
-    function disconnect() {
-
-        if (stompClient !== null) {
-            stompClient.disconnect();
-        }
-
-        console.log("Disconnected");
+    function subscribeToChat(chatId) {
+        stompClient.subscribe("/user/queue/chat/" + chatId, function (message) {
+            const msg = JSON.parse(message.body);
+            displayMessage(msg);
+        });
     }
 
-    // SEND MESSAGE
     function sendMessage() {
-
-        if (currentChatId === null) {
+        if (currentChatId === null || stompClient === null) {
             return;
         }
 
         const input = document.getElementById("messageInput");
-
         const text = input.value.trim();
 
         if (text === "") {
             return;
         }
 
-        // Must match your MessageDTO fields
         const messageDTO = {
             chatId: currentChatId,
-            text: text,
-            repliedToMessageId: null
+            text: text
         };
-
-        console.log("Sending:", messageDTO);
 
         stompClient.send(
             "/app/chat.send",
@@ -147,81 +370,63 @@
             JSON.stringify(messageDTO)
         );
 
-        // clear input
         input.value = "";
     }
 
-    // RECEIVE MESSAGES
-    function subscribeToChat(chatId) {
-
-        stompClient.subscribe(
-            "/user/queue/chat/" + chatId,
-            function (message) {
-
-                const msg = JSON.parse(message.body);
-
-                console.log("Received:", msg);
-
-                displayMessage(msg);
-            }
-        );
-    }
-
-    // DISPLAY MESSAGE
     function displayMessage(message) {
+        const emptyChat = document.getElementById("emptyChat");
 
-        const container =
-            document.getElementById("messagesContainer");
+        if (emptyChat) {
+            emptyChat.remove();
+        }
 
-        const div = document.createElement("div");
+        const container = document.getElementById("messagesContainer");
 
-        div.className = "message received";
+        const row = document.createElement("div");
+        const isMine = Number(message.senderId) === Number(currentUserId);
+
+        row.className = "message-row " + (isMine ? "sent" : "received");
 
         let time = "";
 
         if (message.timestamp) {
-
-            time = new Date(message.timestamp)
-                .toLocaleTimeString([], {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
+            time = new Date(message.timestamp).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit"
+            });
         }
 
-        div.innerHTML = `<div><strong>${message.sender}</strong> ${message.text} <span>${time}</span></div>`;
+        row.innerHTML = `
+            <div class="message-bubble">
+                ${!isMine ? `<div class="message-sender">${escapeHtml(message.sender)}</div>` : ""}
+                <div class="message-text">${escapeHtml(message.text)}</div>
+                <div class="message-time">${time}</div>
+            </div>
+        `;
 
-        container.appendChild(div);
-
-        container.scrollTop =
-            container.scrollHeight;
+        container.appendChild(row);
+        container.scrollTop = container.scrollHeight;
     }
 
-    // SEND ON ENTER
-    document.addEventListener("DOMContentLoaded", function () {
-
-        const input = document.getElementById("messageInput");
-
-        if (input) {
-
-            input.addEventListener("keypress", function (event) {
-
-                if (event.key === "Enter") {
-                    event.preventDefault();
-                    sendMessage();
-                }
-
-            });
-
+    function escapeHtml(value) {
+        if (value === null || value === undefined) {
+            return "";
         }
 
-        connect();
-    });
+        return String(value)
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+    }
 
-    // Disconnect on page leave
     window.addEventListener("beforeunload", function () {
-        disconnect();
+        if (stompClient !== null) {
+            stompClient.disconnect();
+        }
     });
-
 </script>
+
 </body>
 </html>

@@ -192,10 +192,10 @@ public class AuthController {
      */
     @GetMapping("/verify-login")
     public String showVerifyLoginPage(HttpSession session, Model model) {
-        String name = (String) session.getAttribute("pendingName");
-        String email = userService.findByUsername(name).getEmail();
+        String email = (String) session.getAttribute("pendingName");
+        User user = userService.findByEmail(email);
 
-        if (email == null) {
+        if (user == null || email == null || email.isEmpty()) {
             model.addAttribute("error", "Сессия истекла. Пожалуйста, авторизуйтесь заново.");
             return "redirect:/login";
         }
@@ -218,10 +218,8 @@ public class AuthController {
     public String verifyLogin(@RequestParam("otp_code") String otpCode,
                               HttpSession session, Model model){
 
-        String name = (String) session.getAttribute("pendingName");
-        User user = userService.findByUsername(name);
-
-        String email = user.getEmail();
+        String email = (String) session.getAttribute("pendingName");
+        User user = userService.findByEmail(email);
 
         if (email == null || email.isEmpty()) {
             model.addAttribute("error", "Сессия истекла. Пожалуйста, авторизуйтесь заново.");
