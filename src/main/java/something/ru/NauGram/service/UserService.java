@@ -158,7 +158,7 @@ public class UserService implements UserDetailsService {
             throw new UsernameNotFoundException("User not found");
         }
 
-        return new org.springframework.security.core.userdetails.User(user.getUsername(),
+        return new org.springframework.security.core.userdetails.User(user.getEmail(),
                 user.getPassword(),
                 List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())));
     }
@@ -217,19 +217,12 @@ public class UserService implements UserDetailsService {
 
         Object principal = auth.getPrincipal();
 
-
         if (principal instanceof UserDetails userDetails) {
-            String username = userDetails.getUsername();
-
-            return findByUsername(username);
+            String email = userDetails.getUsername();
+            return findByEmail(email);
         }
 
-        String username = auth.getName();
-        User user = findByEmail(username);
-        if (user == null) {
-            user = findByUsername(username);
-        }
-
-        return user;
+        String email = auth.getName();
+        return findByEmail(email);
     }
 }

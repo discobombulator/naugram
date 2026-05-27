@@ -56,7 +56,7 @@ public class UserSettingsChangeController {
                                Authentication authentication,
                                RedirectAttributes redirectAttributes) {
         try {
-            User user = userService.findByUsername(authentication.getName());
+            User user = userService.findByEmail(authentication.getName());
 
             if (user == null) {
                 throw new RuntimeException("Пользователь не найден");

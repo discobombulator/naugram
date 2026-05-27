@@ -47,7 +47,11 @@ public class MainController {
                                Authentication authentication,
                                HttpServletRequest request,
                                HttpServletResponse response) {
-        User currentUser = userService.findByUsername(authentication.getName());
+        User currentUser = userService.findByEmail(authentication.getName());
+
+        if (currentUser == null) {
+            return "redirect:/login";
+        }
 
         String currentLanguage = "ru";
 

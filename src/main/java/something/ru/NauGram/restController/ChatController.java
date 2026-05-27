@@ -101,7 +101,7 @@ public class ChatController {
             throw new RuntimeException("Unauthorized");
         }
 
-        User sender = userService.findByUsername(principal.getName());
+        User sender = userService.findByEmail(principal.getName());
 
         if (sender == null) {
             sender = userService.findByEmail(principal.getName());
@@ -126,7 +126,7 @@ public class ChatController {
 
         for (User user : users) {
             messagingTemplate.convertAndSendToUser(
-                    user.getUsername(),
+                    user.getEmail(),
                     "/queue/chat/" + chat.getId(),
                     response
             );
