@@ -92,6 +92,22 @@ public class ChatService {
                 .map(ChatParticipant::getUser).toList();
     }
 
+    /**
+     * Создаёт новый групповой чат и добавляет в него участников.
+     *
+     * <p>Создаёт чат на основе переданных данных, добавляет в него
+     * пользователей из списка {@code userIds}, а также назначает
+     * пользователя, создавшего чат, владельцем с ролью
+     * {@code OWNER}.</p>
+     *
+     * <p>Если пользователь из списка участников не найден
+     * в базе данных, он пропускается.</p>
+     *
+     * @param request DTO с данными создаваемого чата:
+     *                названием, описанием и списком участников
+     * @param userCreatedChat пользователь, создавший чат
+     * @return идентификатор созданного чата
+     */
     @Transactional
     public Long createChat(CreateChatDTO request, User userCreatedChat) {
         Chat chat = new Chat();

@@ -30,5 +30,14 @@ public interface UserRepository extends CrudRepository<User, Long> {
     @Query("UPDATE User u SET u.enabled = true WHERE u.email = :email")
     void enableUser(@Param("email") String email);
 
+    /**
+     * Выполняет поиск пользователей по имени пользователя.
+     *
+     * <p>Возвращает не более 10 пользователей, у которых значение
+     * {@code username} содержит указанную строку без учёта регистра.</p>
+     *
+     * @param username строка для поиска по имени пользователя
+     * @return список найденных пользователей, максимум 10 записей
+     */
     List<User> findTop10ByUsernameContainingIgnoreCase(String username);
 }

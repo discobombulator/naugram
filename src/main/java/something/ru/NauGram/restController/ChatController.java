@@ -142,11 +142,26 @@ public class ChatController {
         );
     }
 
+    /**
+     * Отображает страницу создания нового чата.
+     *
+     * @param model объект модели для передачи данных в представление
+     * @return имя HTML-шаблона страницы создания чата
+     */
     @GetMapping("/chats/create")
     public String createChat(Model model) {
         return "chatCreation";
     }
 
+    /**
+     * Выполняет поиск пользователей по имени пользователя.
+     *
+     * <p>Возвращает список пользователей, чьи имена содержат
+     * указанную строку поиска.</p>
+     *
+     * @param query строка поиска по имени пользователя
+     * @return HTTP-ответ со списком найденных пользователей
+     */
     @GetMapping("/api/users/search")
     public ResponseEntity<List<UserSearchDTO>> searchUsers(
             @RequestParam String query
@@ -157,6 +172,16 @@ public class ChatController {
         return ResponseEntity.ok(users);
     }
 
+    /**
+     * Создаёт новый чат.
+     *
+     * <p>Создаёт чат с указанным названием, описанием и списком
+     * участников. Текущий авторизованный пользователь автоматически
+     * становится участником создаваемого чата.</p>
+     *
+     * @param request DTO с данными нового чата
+     * @return HTTP-ответ с идентификатором созданного чата
+     */
     @PostMapping("/api/chats/create")
     public ResponseEntity<Long> createChat(@RequestBody CreateChatDTO request) {
 
