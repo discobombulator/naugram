@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>NauGram - Создание чата</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f7f9fb;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+        }
+
+        .create-chat-container {
+            width: 100%;
+            max-width: 760px;
+            background: white;
+            border-radius: 24px;
+            border: 1px solid #f5833d22;
+            box-shadow: 0 10px 35px rgba(245, 131, 61, 0.08);
+            overflow: hidden;
+        }
+
+        .header {
+            padding: 24px 28px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .header-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            background: #f5833d15;
+            color: #f5833d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header-title h1 {
+            font-size: 24px;
+            color: #f5833d;
+            margin-bottom: 4px;
+        }
+
+        .header-title p {
+            color: #999;
+            font-size: 14px;
+        }
+
+        .back-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            border: none;
+            background: #f5833d15;
+            color: #f5833d;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+            text-decoration: none;
+        }
+
+        .back-btn:hover {
+            background: #f5833d25;
+        }
+
+        .form-body {
+            padding: 28px;
+        }
+
+        .section-label {
+            font-size: 11px;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            margin-left: 4px;
+        }
+
+        .input-group {
+            margin-bottom: 22px;
+        }
+
+        .panel-input,
+        .panel-textarea {
+            width: 100%;
+            border: 2px solid #f5833d33;
+            border-radius: 14px;
+            outline: none;
+            transition: 0.25s;
+            font-family: inherit;
+            font-size: 15px;
+            color: #333;
+            background: white;
+        }
+
+        .panel-input {
+            height: 54px;
+            padding: 0 16px;
+        }
+
+        .panel-textarea {
+            min-height: 120px;
+            resize: vertical;
+            padding: 16px;
+        }
+
+        .panel-input:focus,
+        .panel-textarea:focus {
+            border-color: #f5833d;
+        }
+
+        .users-wrapper {
+            border: 2px solid #f5833d33;
+            border-radius: 16px;
+            overflow: hidden;
+            background: white;
+        }
+
+        .user-search-box {
+            padding: 14px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .selected-users {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 14px;
+            border-bottom: 1px solid #f5f5f5;
+            min-height: 68px;
+        }
+
+        .selected-user {
+            background: #f5833d15;
+            color: #f5833d;
+            padding: 10px 14px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .remove-user-btn {
+            border: none;
+            background: none;
+            color: #f5833d;
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 1;
+        }
+
+        .search-results {
+            max-height: 240px;
+            overflow-y: auto;
+        }
+
+        .search-results::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .search-results::-webkit-scrollbar-thumb {
+            background: #f5833d55;
+            border-radius: 10px;
+        }
+
+        .user-result {
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: 0.2s;
+            border-bottom: 1px solid #fafafa;
+        }
+
+        .user-result:hover {
+            background: #fff4ed;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: #f5833d;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .user-meta {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .username {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .nickname {
+            color: #999;
+            font-size: 13px;
+        }
+
+        .add-user-btn {
+            border: none;
+            background: #f5833d;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: 0.2s;
+        }
+
+        .add-user-btn:hover {
+            background: #d96d2e;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 14px;
+            margin-top: 30px;
+        }
+
+        .secondary-btn,
+        .primary-btn {
+            height: 52px;
+            padding: 0 24px;
+            border-radius: 14px;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: bold;
+            transition: 0.2s;
+            font-family: inherit;
+        }
+
+        .secondary-btn {
+            background: #f1f1f1;
+            color: #555;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .secondary-btn:hover {
+            background: #e7e7e7;
+        }
+
+        .primary-btn {
+            background: #f5833d;
+            color: white;
+        }
+
+        .primary-btn:hover {
+            background: #d96d2e;
+        }
+
+        .empty-results {
+            padding: 20px;
+            text-align: center;
+            color: #aaa;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="create-chat-container">
+
+    <!-- HEADER -->
+    <div class="header">
+
+        <div class="header-left">
+
+            <div class="header-icon">
+                <svg width="28"
+                     height="28"
+                     viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2"
+                     stroke-linecap="round"
+                     stroke-linejoin="round">
+                    <path d="M12 5v14"></path>
+                    <path d="M5 12h14"></path>
+                </svg>
+            </div>
+
+            <div class="header-title">
+                <h1>Создание чата</h1>
+                <p>Создайте новый групповой чат NauGram</p>
+            </div>
+
+        </div>
+
+        <!-- LEAVE PAGE BUTTON -->
+        <a href="/chats" class="back-btn" title="Назад">
+
+            <svg width="22"
+                 height="22"
+                 viewBox="0 0 24 24"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="2"
+                 stroke-linecap="round"
+                 stroke-linejoin="round">
+                <path d="M15 18l-6-6 6-6"></path>
+            </svg>
+
+        </a>
+
+    </div>
+
+    <!-- FORM -->
+    <form action="/chats/create"
+          method="POST"
+          id="createChatForm">
+
+        <div class="form-body">
+
+            <!-- CHAT NAME -->
+            <div class="input-group">
+
+                <div class="section-label">
+                    Название чата
+                </div>
+
+                <input type="text"
+                       id="chatName"
+                       name="chatName"
+                       class="panel-input"
+                       placeholder="Введите название чата"
+                       required>
+
+            </div>
+
+            <!-- DESCRIPTION -->
+            <div class="input-group">
+
+                <div class="section-label">
+                    Описание
+                </div>
+
+                <textarea id="chatDescription"
+                          name="description"
+                          class="panel-textarea"
+                          placeholder="Введите описание чата"></textarea>
+
+            </div>
+
+            <!-- USERS -->
+            <div class="input-group">
+
+                <div class="section-label">
+                    Добавить пользователей
+                </div>
+
+                <div class="users-wrapper">
+
+                    <!-- SEARCH -->
+                    <div class="user-search-box">
+
+                        <input type="text"
+                               id="userSearchInput"
+                               class="panel-input"
+                               placeholder="Введите username..."
+                               autocomplete="off">
+
+                    </div>
+
+                    <!-- SELECTED USERS -->
+                    <div class="selected-users" id="selectedUsers">
+                    </div>
+
+                    <!-- RESULTS -->
+                    <div class="search-results" id="searchResults">
+
+                        <div class="empty-results">
+                            Начните вводить username
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- hidden inputs container -->
+            <div id="hiddenUsersContainer"></div>
+
+            <!-- ACTIONS -->
+            <div class="actions">
+
+                <a href="/chats"
+                   class="secondary-btn">
+                    Отмена
+                </a>
+
+                <button type="button"
+                        class="primary-btn"
+                        onclick="createChat()">
+                    Создать чат
+                </button>
+
+            </div>
+
+        </div>
+
+    </form>
+
+</div>
+
+<script>
+
+    const searchInput = document.getElementById('userSearchInput');
+    const searchResults = document.getElementById('searchResults');
+    const selectedUsers = document.getElementById('selectedUsers');
+    const hiddenUsersContainer = document.getElementById('hiddenUsersContainer');
+
+    const addedUsers = new Map();
+
+    let debounceTimer;
+
+    searchInput.addEventListener('input', function () {
+
+        clearTimeout(debounceTimer);
+
+        const query = this.value.trim();
+
+        if (query.length < 2) {
+
+            searchResults.innerHTML = `
+                <div class="empty-results">
+                    Введите минимум 2 символа
+                </div>
+            `;
+
+            return;
+        }
+
+        debounceTimer = setTimeout(() => {
+            searchUsers(query);
+        }, 300);
+
+    });
+
+    async function searchUsers(query) {
+
+        try {
+
+            const response = await fetch(
+                `/api/users/search?query=${encodeURIComponent(query)}`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error('Search request failed');
+            }
+
+            const users = await response.json();
+
+            renderSearchResults(users);
+
+        } catch (error) {
+
+            console.error(error);
+
+            searchResults.innerHTML = `
+                <div class="empty-results">
+                    Ошибка загрузки пользователей
+                </div>
+            `;
+        }
+    }
+
+    function renderSearchResults(users) {
+
+        searchResults.innerHTML = '';
+
+        if (!users || users.length === 0) {
+
+            searchResults.innerHTML = `
+                <div class="empty-results">
+                    Пользователи не найдены
+                </div>
+            `;
+
+            return;
+        }
+
+        users.forEach(user => {
+
+            if (addedUsers.has(user.id)) {
+                return;
+            }
+
+            const firstLetter = user.username
+                ? user.username.charAt(0).toUpperCase()
+                : '?';
+
+            const div = document.createElement('div');
+
+            div.className = 'user-result';
+
+            div.innerHTML = `
+                <div class="user-info">
+
+                    <div class="user-avatar">
+                        ${firstLetter}
+                    </div>
+
+                    <div class="user-meta">
+
+                        <div class="username">
+                            @${user.username}
+                        </div>
+
+                        <div class="nickname">
+                            ${user.realName || 'Пользователь'}
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <button type="button"
+                        class="add-user-btn">
+                    +
+                </button>
+            `;
+
+            div.querySelector('.add-user-btn')
+                .addEventListener('click', () => addUser(user));
+
+            searchResults.appendChild(div);
+
+        });
+
+    }
+
+    function addUser(user) {
+
+        if (addedUsers.has(user.id)) {
+            return;
+        }
+
+        addedUsers.set(user.id, user);
+
+        const tag = document.createElement('div');
+
+        tag.className = 'selected-user';
+
+        tag.id = `selected-user-${user.id}`;
+
+        tag.innerHTML = `
+            <span>@${user.username}</span>
+
+            <button type="button"
+                    class="remove-user-btn">
+                ×
+            </button>
+        `;
+
+        tag.querySelector('.remove-user-btn')
+            .addEventListener('click', () => removeUser(user.id));
+
+        selectedUsers.appendChild(tag);
+
+        // hidden input for backend form submit
+        const hiddenInput = document.createElement('input');
+
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = 'userIds';
+        hiddenInput.value = user.id;
+        hiddenInput.id = `hidden-user-${user.id}`;
+
+        hiddenUsersContainer.appendChild(hiddenInput);
+
+        searchInput.value = '';
+        searchResults.innerHTML = '';
+
+    }
+
+    function removeUser(userId) {
+
+        addedUsers.delete(userId);
+
+        const selected = document.getElementById(
+            `selected-user-${userId}`
+        );
+
+        const hidden = document.getElementById(
+            `hidden-user-${userId}`
+        );
+
+        if (selected) {
+            selected.remove();
+        }
+
+        if (hidden) {
+            hidden.remove();
+        }
+
+    }
+
+    async function createChat() {
+
+        const chatName = document.getElementById('chatName').value.trim();
+
+        const description = document.getElementById('chatDescription').value.trim();
+
+        const userIds = Array.from(addedUsers.keys());
+
+        if (!chatName) {
+
+            alert('Введите название чата');
+
+            return;
+        }
+
+        const requestBody = {
+            chatName: chatName,
+            description: description,
+            userIds: userIds
+        };
+
+        try {
+
+            const response = await fetch('/api/chats/create', {
+
+                method: 'POST',
+
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+
+                body: JSON.stringify(requestBody)
+
+            });
+
+            if (!response.ok) {
+
+                const errorText = await response.text();
+
+                throw new Error(errorText || 'Ошибка создания чата');
+            }
+
+            const createdChat = await response.json();
+
+
+            // redirect to created chat
+            window.location.href = `/chats/${createdChat}`;
+
+        } catch (error) {
+
+            console.error(error);
+
+            alert(error.message || 'Ошибка создания чата');
+
+        }
+
+    }
+</script>
+
+</body>
+</html>
