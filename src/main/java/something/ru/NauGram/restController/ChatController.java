@@ -2,22 +2,22 @@ package something.ru.NauGram.restController;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.*;
+import something.ru.NauGram.dto.ChatUpdateDTO;
+import something.ru.NauGram.dto.CreateChatDTO;
 import something.ru.NauGram.dto.MessageDTO;
+import something.ru.NauGram.dto.UserSearchDTO;
 import something.ru.NauGram.model.Chat;
 import something.ru.NauGram.model.Message;
 import something.ru.NauGram.model.User;
-import something.ru.NauGram.service.ChatParticipantService;
-import something.ru.NauGram.service.ChatService;
-import something.ru.NauGram.service.MessageService;
-import something.ru.NauGram.service.UserService;
+import something.ru.NauGram.service.*;
 
 import java.security.Principal;
 import java.util.List;
@@ -37,6 +37,7 @@ public class ChatController {
     private final ChatParticipantService chatParticipantService;
     private final MessageService messageService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final ChatLastReadService chatLastReadService;
 
     /**
      * Отображает страницу со списком всех чатов текущего пользователя.
@@ -121,7 +122,6 @@ public class ChatController {
 
         Message savedMessage = messageService.saveMessage(chat, sender, null, dto.getText());
         MessageDTO response = savedMessage.toMessageDTO();
-
         List<User> users = chatService.getChatParticipants(chat.getId());
 
         for (User user : users) {
@@ -130,13 +130,72 @@ public class ChatController {
                     "/queue/chat/" + chat.getId(),
                     response
             );
+
+            messagingTemplate.convertAndSendToUser(
+                    user.getEmail(),
+                    "/notify/chats",
+                    new ChatUpdateDTO(
+                            chat.getId(),
+                            savedMessage.getMessageText(),
+                            chatLastReadService.getUnreadMessages(user)
+                    )
+            );
         }
 
-        log.info(
+        log.debug(
                 "Message \"{}\" sent to chat {} by {}",
                 response.getText(),
                 chat.getId(),
                 sender.getUsername()
         );
+    }
+
+    /**
+     * Отображает страницу создания нового чата.
+     *
+     * @param model объект модели для передачи данных в представление
+     * @return имя HTML-шаблона страницы создания чата
+     */
+    @GetMapping("/chats/create")
+    public String createChat(Model model) {
+        return "chatCreation";
+    }
+
+    /**
+     * Выполняет поиск пользователей по имени пользователя.
+     *
+     * <p>Возвращает список пользователей, чьи имена содержат
+     * указанную строку поиска.</p>
+     *
+     * @param query строка поиска по имени пользователя
+     * @return HTTP-ответ со списком найденных пользователей
+     */
+    @GetMapping("/api/users/search")
+    public ResponseEntity<List<UserSearchDTO>> searchUsers(
+            @RequestParam String query
+    ) {
+
+        List<UserSearchDTO> users = userService.searchUsers(query);
+
+        return ResponseEntity.ok(users);
+    }
+
+    /**
+     * Создаёт новый чат.
+     *
+     * <p>Создаёт чат с указанным названием, описанием и списком
+     * участников. Текущий авторизованный пользователь автоматически
+     * становится участником создаваемого чата.</p>
+     *
+     * @param request DTO с данными нового чата
+     * @return HTTP-ответ с идентификатором созданного чата
+     */
+    @PostMapping("/api/chats/create")
+    public ResponseEntity<Long> createChat(@RequestBody CreateChatDTO request) {
+
+        Long response =
+                chatService.createChat(request, userService.getCurrentUser());
+
+        return ResponseEntity.ok(response);
     }
 }
