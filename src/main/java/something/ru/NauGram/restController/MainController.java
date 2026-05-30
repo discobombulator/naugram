@@ -1,40 +1,38 @@
 package something.ru.NauGram.restController;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.servlet.LocaleResolver;
+import something.ru.NauGram.dto.ChatUpdateDTO;
+import something.ru.NauGram.model.Chat;
 import something.ru.NauGram.model.User;
 import something.ru.NauGram.model.UsersProfile;
+import something.ru.NauGram.service.ChatLastReadService;
 import something.ru.NauGram.service.ChatService;
 import something.ru.NauGram.service.UserProfileService;
 import something.ru.NauGram.service.UserService;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.web.servlet.LocaleResolver;
-import something.ru.NauGram.model.Chat;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
+@Slf4j
 @Controller
+@AllArgsConstructor
 public class MainController {
     private final UserService userService;
     private final UserProfileService userProfileService;
-
+    private final ChatLastReadService chatLastReadService;
     private final ChatService chatService;
 
     private final LocaleResolver localeResolver;
-
-    public MainController(UserService userService,
-                          UserProfileService userProfileService, ChatService chatService,
-                          LocaleResolver localeResolver) {
-        this.userService = userService;
-        this.userProfileService = userProfileService;
-        this.chatService = chatService;
-        this.localeResolver = localeResolver;
-    }
 
     /**
      * Отображает главную страницу приложения.
@@ -55,7 +53,7 @@ public class MainController {
 
         String currentLanguage = "ru";
 
-        if (currentUser != null && currentUser.getLanguage() != null && !currentUser.getLanguage().isBlank()) {
+        if (currentUser.getLanguage() != null && !currentUser.getLanguage().isBlank()) {
             currentLanguage = currentUser.getLanguage();
         }
 
@@ -79,12 +77,24 @@ public class MainController {
 
         List<Chat> chats = chatService.getCurrentUserChats(currentUser);
 
+        List<ChatUpdateDTO> initLastReadMessages = new ArrayList<>();
+        for (Chat chat : chats) {
+            initLastReadMessages.add(
+                    new ChatUpdateDTO(
+                            chat.getId(),
+                            chatLastReadService.getLastMessage(currentUser, chat),
+                            chatLastReadService.getUnreadMessages(currentUser, chat)
+                    )
+            );
+        }
+        log.info("{}", initLastReadMessages);
         model.addAttribute("firstName", firstName);
         model.addAttribute("lastName", lastName);
         model.addAttribute("currentLanguage", currentLanguage);
         model.addAttribute("currentUser", currentUser);
         model.addAttribute("chats", chats);
         model.addAttribute("profile", currentUserProfile);
+        model.addAttribute("initialChatLastMessages", initLastReadMessages);
 
         return "mainPage";
     }

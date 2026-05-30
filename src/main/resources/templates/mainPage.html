@@ -754,7 +754,9 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js"></script>
-<script>
+<script th:inline="javascript">
+    const initialChatLastMessages = /*[[${initialChatLastMessages}]]*/ [];
+
     const socket = new SockJS('/ws');
 
     const stompClient =
@@ -768,7 +770,7 @@
                 console.log('Connected');
 
                 stompClient.subscribe(
-                    '/user/notify/chats',
+                    '/user/notify/chat',
                     (message) => {
 
                         const data =
@@ -790,7 +792,10 @@
                 `[data-chat-id="${data.chatId}"]`
             );
 
-        if (!chat) return;
+        if (!chat) {
+            console.log("No chat " + chat)
+            return;
+        }
 
         const lastMessage =
             chat.querySelector('.last-message');
@@ -829,6 +834,9 @@
         list.prepend(chat);
     }
     stompClient.activate();
+
+    initialChatLastMessages.forEach(data => updateChat(data))
+    console.log(initialChatLastMessages)
 </script>
 
 <script>

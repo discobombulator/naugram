@@ -131,15 +131,7 @@ public class ChatController {
                     response
             );
 
-            messagingTemplate.convertAndSendToUser(
-                    user.getEmail(),
-                    "/notify/chats",
-                    new ChatUpdateDTO(
-                            chat.getId(),
-                            savedMessage.getMessageText(),
-                            chatLastReadService.getUnreadMessages(user)
-                    )
-            );
+            sendNotificationToUser(user, chat, savedMessage);
         }
 
         log.debug(
@@ -147,6 +139,18 @@ public class ChatController {
                 response.getText(),
                 chat.getId(),
                 sender.getUsername()
+        );
+    }
+
+    private void sendNotificationToUser(User user, Chat chat, Message savedMessage) {
+        messagingTemplate.convertAndSendToUser(
+                user.getEmail(),
+                "/notify/chat",
+                new ChatUpdateDTO(
+                        chat.getId(),
+                        savedMessage.getMessageText(),
+                        chatLastReadService.getUnreadMessages(user, chat)
+                )
         );
     }
 
