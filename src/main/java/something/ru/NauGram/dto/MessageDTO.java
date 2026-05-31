@@ -15,6 +15,7 @@ import java.util.List;
 @Getter
 @Setter
 public class MessageDTO {
+    private Long id;
     private String text;
     private String sender;
     private Long senderId;

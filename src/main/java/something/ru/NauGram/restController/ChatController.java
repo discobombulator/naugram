@@ -6,17 +6,21 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import something.ru.NauGram.dto.*;
 import org.springframework.web.multipart.MultipartFile;
 import something.ru.NauGram.dto.CreateChatDTO;
 import something.ru.NauGram.dto.MessageDTO;
 import something.ru.NauGram.dto.UserSearchDTO;
 import something.ru.NauGram.model.Chat;
+import something.ru.NauGram.model.ChatParticipant;
 import something.ru.NauGram.model.Message;
 import something.ru.NauGram.model.User;
+import something.ru.NauGram.service.*;
 import something.ru.NauGram.model.UsersProfile;
 import something.ru.NauGram.service.*;
 
@@ -38,6 +42,7 @@ public class ChatController {
     private final ChatParticipantService chatParticipantService;
     private final MessageService messageService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final ChatLastReadService chatLastReadService;
     private final UserProfileService userProfileService;
     private final MediaStorageService mediaStorageService;
 
@@ -66,16 +71,36 @@ public class ChatController {
      */
     @GetMapping("/chats/{chatId}")
     public String chatPage(@PathVariable Long chatId, Model model) {
-        User currentUser = userService.getCurrentUser();
+        User user = userService.getCurrentUser();
 
-        boolean allowed = chatParticipantService.isParticipant(chatId, currentUser.getId());
+        boolean allowed = chatParticipantService.isParticipant(chatId, user.getId());
 
         if (!allowed) {
             throw new AccessDeniedException("You do not have access to this chat");
         }
 
         Chat chat = chatService.getChat(chatId);
-        User companion = chatService.getCompanion(chat, currentUser);
+        Long lastReadMessageId = null;
+        try{
+            ChatParticipant cp = chatParticipantService.getChatParticipant(chat, user);
+            lastReadMessageId = chatLastReadService.getLastMessageId(cp);
+        } catch (Exception e) {
+
+        }
+        if (lastReadMessageId == null){
+            try {
+                lastReadMessageId = messageService.getFirstMessage(chat);
+            } catch (Exception ex) {
+
+            }
+        }
+
+        if (lastReadMessageId != null){
+            model.addAttribute("lastReadMessageId", lastReadMessageId);
+            log.info("last message id {}", lastReadMessageId);
+        }
+
+        User companion = chatService.getCompanion(chat, user);
 
         UsersProfile companionProfile = companion != null
                 ? userProfileService.findByUser(companion).orElse(null)
@@ -86,9 +111,9 @@ public class ChatController {
 
         model.addAttribute("selectedChat", chat);
         model.addAttribute("messages", messageService.getInitialMessages(chat.getId()));
-        model.addAttribute("currentUser", currentUser);
-        model.addAttribute("currentUserId", currentUser.getId());
-        model.addAttribute("currentUsername", currentUser.getUsername());
+        model.addAttribute("currentUser", user);
+        model.addAttribute("currentUserId", user.getId());
+        model.addAttribute("currentUsername", user.getUsername());
 
         return "chat";
     }
@@ -141,6 +166,8 @@ public class ChatController {
                     "/queue/chat/" + chat.getId(),
                     response
             );
+
+            sendNotificationToUser(user, chat, savedMessage);
         }
 
         log.info(
@@ -149,6 +176,46 @@ public class ChatController {
                 chat.getId(),
                 sender.getUsername()
         );
+    }
+
+    @MessageMapping("/chat.read")
+    public void readMessage(ChatReadDTO dto, Authentication auth) {
+
+        User user =
+                userService.findByEmail(
+                        auth.getName()
+                );
+
+
+        try {
+            Chat chat = chatService.getChat(dto.getChatId());
+            ChatParticipant cp = chatParticipantService.getChatParticipant(chat,user);
+            chatLastReadService.updateLastRead(cp, dto.getMessageId());
+            log.info("updated user:{}, dto:{}",
+                    user.getUsername(),
+                    dto
+            );
+        } catch (Exception e) {
+            log.error("Cheto ne to");
+        }
+    }
+
+    private void sendNotificationToUser(User user, Chat chat, Message savedMessage) {
+        try {
+            messagingTemplate.convertAndSendToUser(
+                    user.getEmail(),
+                    "/notify/chat",
+                    new ChatUpdateDTO(
+                            chat.getId(),
+                            messageService.convertToDto(savedMessage).getText(),
+                            chatLastReadService.getUnreadMessages(
+                                    chatParticipantService.getChatParticipant(chat, user)),
+                            savedMessage.getMessageType().toString()
+                    )
+            );
+        } catch (IllegalArgumentException e) {
+            log.error(e.toString());
+        }
     }
 
     /**

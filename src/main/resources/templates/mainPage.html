@@ -4,7 +4,11 @@
     <meta charset="UTF-8">
     <title th:text="#{main.page.title}">NauGram - Чаты</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -94,8 +98,14 @@
             overflow-y: auto;
         }
 
-        .chats-list::-webkit-scrollbar { width: 5px; }
-        .chats-list::-webkit-scrollbar-thumb { background: #f5833d44; border-radius: 10px; }
+        .chats-list::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .chats-list::-webkit-scrollbar-thumb {
+            background: #f5833d44;
+            border-radius: 10px;
+        }
 
         .chat-item {
             display: flex;
@@ -106,8 +116,13 @@
             transition: background 0.2s;
         }
 
-        .chat-item:hover { background: #fff4ed; }
-        .chat-item.active { background: #fff4ed; }
+        .chat-item:hover {
+            background: #fff4ed;
+        }
+
+        .chat-item.active {
+            background: #fff4ed;
+        }
 
         .chat-avatar {
             width: 50px;
@@ -132,7 +147,10 @@
             border-radius: 50%;
         }
 
-        .chat-info { flex: 1; overflow: hidden; }
+        .chat-info {
+            flex: 1;
+            overflow: hidden;
+        }
 
         .chat-name {
             font-weight: bold;
@@ -143,7 +161,11 @@
             margin-bottom: 4px;
         }
 
-        .chat-time { font-size: 11px; color: #aaa; font-weight: normal; }
+        .chat-time {
+            font-size: 11px;
+            color: #aaa;
+            font-weight: normal;
+        }
 
         .chat-last-msg {
             font-size: 13px;
@@ -234,8 +256,14 @@
             padding: 16px;
         }
 
-        .panel-body::-webkit-scrollbar { width: 5px; }
-        .panel-body::-webkit-scrollbar-thumb { background: #f5833d44; border-radius: 10px; }
+        .panel-body::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .panel-body::-webkit-scrollbar-thumb {
+            background: #f5833d44;
+            border-radius: 10px;
+        }
 
         /* ─── Элементы форм в панелях ─── */
         .section-label {
@@ -246,7 +274,9 @@
             margin: 16px 0 8px 4px;
         }
 
-        .section-label:first-child { margin-top: 4px; }
+        .section-label:first-child {
+            margin-top: 4px;
+        }
 
         .panel-input,
         .panel-select {
@@ -293,7 +323,9 @@
             font-family: inherit;
         }
 
-        .save-btn:hover { background: #d96d2e; }
+        .save-btn:hover {
+            background: #d96d2e;
+        }
 
         .logout-btn {
             display: block;
@@ -312,7 +344,9 @@
             transition: background 0.2s;
         }
 
-        .logout-btn:hover { background: #ff4d4d15; }
+        .logout-btn:hover {
+            background: #ff4d4d15;
+        }
 
         /* ─── Редактор профиля — аватар ─── */
         .avatar-editor {
@@ -407,23 +441,23 @@
             margin-bottom: 8px;
         }
 
-        .welcome-msg p { color: #aaa; font-size: 15px; }
-
-        /* ─── Уведомления ─── */
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 14px 22px;
-            border-radius: 12px;
+        .welcome-msg p {
+            color: #aaa;
             font-size: 15px;
-            font-weight: bold;
-            z-index: 1000;
-            animation: fadeIn 0.3s ease;
         }
 
-        .notification.error { background: #ff4d4d; color: white; }
-        .notification.success { background: #4caf50; color: white; }
+        /* ─── Уведомления ─── */
+
+
+        .notification.error {
+            background: #ff4d4d;
+            color: white;
+        }
+
+        .notification.success {
+            background: #4caf50;
+            color: white;
+        }
 
         .notification {
             position: fixed;
@@ -437,10 +471,18 @@
             animation: fadeIn 0.3s ease;
             transition: opacity 0.3s ease, transform 0.3s ease;
         }
+
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to   { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
+
         .checkbox-row {
             display: flex;
             align-items: center;
@@ -461,7 +503,10 @@
             text-decoration: none;
             color: inherit;
         }
-
+        .media-message-preview {
+            color: #74c0fc;
+            font-weight: 500;
+        }
         .empty-chats {
             padding: 24px 16px;
             text-align: center;
@@ -483,7 +528,11 @@
     <div class="slide-panel left" id="settingsPanel">
         <div class="panel-header">
             <button class="icon-btn" onclick="closePanel('settings')">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
             </button>
             <span class="panel-title" th:text="#{settings.title}">Настройки</span>
         </div>
@@ -542,7 +591,11 @@
             <div class="spacer"></div>
             <span class="panel-title" th:text="#{profile.title}">Профиль</span>
             <button class="icon-btn" onclick="closePanel('profile')">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
             </button>
         </div>
         <div class="panel-body">
@@ -571,6 +624,11 @@
                         </span>
 
                         <div class="avatar-edit-icon">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f5833d"
+                                 stroke-width="2.5">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f5833d" stroke-width="2.5">
                                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
@@ -643,8 +701,12 @@
     <!-- Хедер сайдбара -->
     <div class="sidebar-header">
         <div class="header-top">
-            <button class="icon-btn" id="settingsBtn" onclick="togglePanel('settings')" th:title="#{settings.title}">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            <button class="icon-btn" id="settingsBtn" onclick="togglePanel('settings')" title="Настройки">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
             </button>
 
             <!-- NEW CHAT BUTTON -->
@@ -664,8 +726,12 @@
                 </svg>
             </a>
 
-            <button class="icon-btn" id="profileBtn" onclick="togglePanel('profile')" th:title="#{profile.title}">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            <button class="icon-btn" id="profileBtn" onclick="togglePanel('profile')" title="Профиль">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
             </button>
         </div>
 
@@ -680,7 +746,8 @@
 
         <a th:each="chat : ${chats}"
            class="chat-item chat-link"
-           th:href="@{/chats/{id}(id=${chat.id})}">
+           th:href="@{/chats/{id}(id=${chat.id})}"
+           th:data-chat-id="${chat.id}">
 
             <div class="chat-avatar"
                  th:text="${chat.chatName != null && !chat.chatName.isBlank()
@@ -706,9 +773,20 @@
                 </div>
 
                 <div class="chat-last-msg">
-                <span th:text="${chat.chatType == 'direct' ? #messages.msg('chat.type.direct') : #messages.msg('chat.type.group')}">
-                    Тип чата
-                </span>
+                <span class="last-message"
+                      th:text="${chat.chatType == 'direct' ? #messages.msg('chat.type.direct') : #messages.msg('chat.type.group')}">
+        Тип чата
+    </span>
+
+                    <span class="unread-badge"
+                          style="display:none;
+                 margin-left:8px;
+                 background:#f5833d;
+                 color:white;
+                 font-size:12px;
+                 border-radius:12px;
+                 padding:2px 8px;">
+                    </span>
                 </div>
             </div>
         </a>
@@ -731,7 +809,120 @@
     </div>
 </div>
 
-<script>
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js"></script>
+<script th:inline="javascript">
+    const initialChatLastMessages = /*[[${initialChatLastMessages}]]*/ [];
+    const I18N = {
+        image: /*[[#{chat.lastMessage.image}]]*/ "Фото",
+        video: /*[[#{chat.lastMessage.video}]]*/ "Видео",
+        media: /*[[#{chat.lastMessage.media}]]*/ "Медиа"
+    };
+    const socket = new SockJS('/ws');
+
+    const stompClient =
+        new StompJs.Client({
+            webSocketFactory: () => socket,
+
+            reconnectDelay: 5000,
+
+            onConnect: () => {
+
+                console.log('Connected');
+
+                stompClient.subscribe(
+                    '/user/notify/chat',
+                    (message) => {
+
+                        const data =
+                            JSON.parse(message.body);
+
+                        updateChat(data);
+                    }
+                );
+            },
+
+            onStompError: frame => {
+                console.error(frame);
+            }
+        });
+    function updateChat(data) {
+
+        const chat =
+            document.querySelector(
+                `[data-chat-id="${data.chatId}"]`
+            );
+
+        if (!chat) {
+            console.log("No chat " + chat)
+            return;
+        }
+
+        const lastMessage =
+            chat.querySelector('.last-message');
+
+        const unreadBadge =
+            chat.querySelector('.unread-badge');
+
+        if (lastMessage) {
+            lastMessage.textContent =
+                data.lastMessage || '';
+        }
+        if (data.messageType === "IMAGE") {
+            lastMessage.textContent = I18N.image;
+            lastMessage.classList.add("media-message-preview");
+        }
+
+        if (data.messageType === "VIDEO") {
+            lastMessage.textContent = I18N.video;
+            lastMessage.classList.add("media-message-preview");
+        }
+
+        if (data.messageType === "MIXED") {
+            lastMessage.textContent = I18N.media;
+            lastMessage.classList.add("media-message-preview");
+        }
+
+        if (
+            data.messageType !== "IMAGE" &&
+            data.messageType !== "VIDEO" &&
+            data.messageType !== "MIXED"
+        ) {
+            lastMessage.classList.remove("media-message-preview");
+        }
+
+        if (unreadBadge) {
+
+            if (data.unreadCount > 0) {
+
+                unreadBadge.style.display =
+                    'inline-flex';
+
+                unreadBadge.textContent =
+                    data.unreadCount;
+
+            } else {
+
+                unreadBadge.style.display =
+                    'none';
+
+                unreadBadge.textContent = '';
+            }
+        }
+
+        // move chat to top
+        const list =
+            document.querySelector('.chats-list');
+
+        list.prepend(chat);
+    }
+    stompClient.activate();
+
+    initialChatLastMessages.forEach(data => updateChat(data))
+    console.log(initialChatLastMessages)
+</script>
+
+<script th:inline="javascript">
     function togglePanel(type) {
         const sp = document.getElementById('settingsPanel');
         const pp = document.getElementById('profilePanel');
@@ -766,7 +957,7 @@
 
 </script>
 
-<script>
+<script th:inline="javascript">
     setTimeout(() => {
         document.querySelectorAll('.notification').forEach(notification => {
             notification.style.opacity = '0';

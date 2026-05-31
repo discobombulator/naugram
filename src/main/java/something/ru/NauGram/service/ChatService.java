@@ -1,14 +1,14 @@
 package something.ru.NauGram.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import something.ru.NauGram.dto.CreateChatDTO;
-import something.ru.NauGram.model.Chat;
-import something.ru.NauGram.model.ChatParticipant;
-import something.ru.NauGram.model.ParticipantRole;
-import something.ru.NauGram.model.User;
+import something.ru.NauGram.dto.MessageDTO;
+import something.ru.NauGram.model.*;
 import something.ru.NauGram.repository.ChatParticipantRepository;
 import something.ru.NauGram.repository.ChatRepository;
 import something.ru.NauGram.repository.UserRepository;
@@ -24,28 +24,11 @@ import java.util.Optional;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class ChatService {
-
     private final ChatRepository chatRepository;
     private final UserRepository userRepository;
     private final ChatParticipantRepository chatParticipantRepository;
-
-    /**
-     * Конструктор сервиса чатов.
-     * Выполняет внедрение зависимостей репозиториев через параметры конструктора.
-     *
-     * @param chatRepository            репозиторий для работы с сущностью {@link Chat}
-     * @param userRepository            репозиторий для работы с сущностью {@link User}
-     * @param chatParticipantRepository репозиторий для работы с сущностью {@link ChatParticipant}
-     */
-    @Autowired
-    public ChatService(ChatRepository chatRepository,
-                       UserRepository userRepository,
-                       ChatParticipantRepository chatParticipantRepository) {
-        this.chatRepository = chatRepository;
-        this.userRepository = userRepository;
-        this.chatParticipantRepository = chatParticipantRepository;
-    }
 
     /**
      * Получает список всех чатов, в которых участвует указанный пользователь.

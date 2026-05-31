@@ -124,7 +124,7 @@ public class MediaStorageService {
                 mediaRoot,
                 "chats",
                 String.valueOf(chatId)
-        );
+        ).toAbsolutePath().normalize();
 
         try {
             Files.createDirectories(chatMediaDir);
@@ -134,6 +134,7 @@ public class MediaStorageService {
 
             return mediaUrlPrefix + "/chats/" + chatId + "/" + fileName;
         } catch (IOException e) {
+            e.printStackTrace();
             throw new RuntimeException("Не удалось сохранить медиафайл", e);
         }
     }

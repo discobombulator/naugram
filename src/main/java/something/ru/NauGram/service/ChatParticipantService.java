@@ -2,7 +2,12 @@ package something.ru.NauGram.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import something.ru.NauGram.model.Chat;
+import something.ru.NauGram.model.ChatParticipant;
+import something.ru.NauGram.model.User;
 import something.ru.NauGram.repository.ChatParticipantRepository;
+
+import java.util.Optional;
 
 @Service
 public class ChatParticipantService {
@@ -24,5 +29,14 @@ public class ChatParticipantService {
      */
     public boolean isParticipant(Long chatId, Long userId) {
         return chatParticipantRepository.findByChatIdAndUserId(chatId, userId).isPresent();
+    }
+
+    public ChatParticipant getChatParticipant(Chat chat, User user) throws IllegalArgumentException {
+        Optional<ChatParticipant> optionalChatParticipant =
+                chatParticipantRepository.findByChatIdAndUserId(chat.getId(), user.getId());
+        if (optionalChatParticipant.isEmpty()) {
+            throw new IllegalArgumentException("Theres is no chat participant with" + user + " " + chat);
+        }
+        return optionalChatParticipant.get();
     }
 }

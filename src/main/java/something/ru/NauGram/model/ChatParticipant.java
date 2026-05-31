@@ -33,14 +33,14 @@ public class ChatParticipant {
     @Column(nullable = false)
     private ParticipantRole role;
 
-    @PrePersist
-    protected void onCreate() {
-        joinedAt = LocalDateTime.now();
-    }
-
-    public ChatParticipant(Chat c, User u, ParticipantRole r){
+    public ChatParticipant(Chat c, User u, ParticipantRole r) {
         this.chat = c;
         this.user = u;
         this.role = r;
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        joinedAt = LocalDateTime.now();
     }
 }

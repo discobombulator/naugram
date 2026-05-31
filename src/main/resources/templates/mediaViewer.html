@@ -79,7 +79,8 @@
 <header class="viewer-header">
     <button class="back-btn"
             type="button"
-            th:onclick="|window.location.href='${back}'|">
+            th:data-back="${back}"
+            onclick="window.location.href=this.dataset.back">
         ←
     </button>
 </header>
