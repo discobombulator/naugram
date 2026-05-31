@@ -101,7 +101,19 @@ public class MediaStorageService {
             "video/mp4",
             "video/webm"
     );
-
+    /**
+     * Сохраняет медиафайл чата на локальный диск.
+     *
+     * <p>Файл сохраняется в директорию конкретного чата, после чего метод
+     * возвращает публичный URL, который можно сохранить в базе данных и
+     * использовать на клиенте для отображения файла.</p>
+     *
+     * @param chatId идентификатор чата, к которому относится файл
+     * @param file загружаемый медиафайл
+     * @return публичный путь к сохранённому файлу
+     * @throws RuntimeException если файл пустой, имеет неподдерживаемый тип
+     *                          или не удалось сохранить его на диск
+     */
     public String saveChatMedia(Long chatId, MultipartFile file) {
         validateChatMedia(file);
 
@@ -126,6 +138,14 @@ public class MediaStorageService {
         }
     }
 
+    /**
+     * Проверяет, что файл является допустимым медиафайлом для чата.
+     *
+     * <p>Разрешены изображения и видео заданных MIME-типов.</p>
+     *
+     * @param file файл для проверки
+     * @throws RuntimeException если файл отсутствует, пустой или имеет неподдерживаемый тип
+     */
     private void validateChatMedia(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new RuntimeException("Файл не выбран");

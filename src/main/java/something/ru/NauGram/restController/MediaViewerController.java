@@ -7,18 +7,21 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * Контроллер страницы просмотра медиафайлов.
+ *
+ * <p>Открывает отдельную страницу для просмотра изображения или видео
+ * из чата с возможностью вернуться обратно в чат.</p>
  */
 @Controller
 public class MediaViewerController {
 
     /**
-     * Открывает страницу просмотра изображения или видео.
+     * Открывает страницу просмотра медиафайла.
      *
-     * @param url ссылка на медиафайл
-     * @param type тип медиа: image или video
-     * @param back ссылка для возврата назад
+     * @param url публичный путь к медиафайлу
+     * @param type тип медиафайла: {@code image} или {@code video}
+     * @param back ссылка для возврата на предыдущую страницу
      * @param model модель страницы
-     * @return шаблон mediaViewer
+     * @return имя шаблона {@code mediaViewer}
      */
     @GetMapping("/media-viewer")
     public String mediaViewer(@RequestParam String url,

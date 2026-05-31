@@ -9,6 +9,7 @@ import something.ru.NauGram.dto.MessageDTO;
 import something.ru.NauGram.model.*;
 import something.ru.NauGram.repository.MessageMediaRepository;
 import something.ru.NauGram.repository.MessageRepository;
+import something.ru.NauGram.repository.UsersProfileRepository;
 
 import java.util.List;
 
@@ -23,7 +24,7 @@ public class MessageService {
     private final int MESSAGE_NUMBER = 50;
 
     private final MessageMediaRepository messageMediaRepository;
-
+    private final UsersProfileRepository usersProfileRepository;
     private final MessageRepository messageRepository;
 
     /**
@@ -33,8 +34,9 @@ public class MessageService {
      * @param messageRepository репозиторий для работы с сущностью {@link Message}
      */
     @Autowired
-    public MessageService(MessageMediaRepository messageMediaRepository, MessageRepository messageRepository) {
+    public MessageService(MessageMediaRepository messageMediaRepository, UsersProfileRepository usersProfileRepository, MessageRepository messageRepository) {
         this.messageMediaRepository = messageMediaRepository;
+        this.usersProfileRepository = usersProfileRepository;
         this.messageRepository = messageRepository;
     }
 
@@ -78,9 +80,29 @@ public class MessageService {
         return messageRepository.findLastMessagesByChatId(
                 chatId,
                 PageRequest.of(0, MESSAGE_NUMBER)
-        ).stream().map(Message::toMessageDTO).toList().reversed();
+        ).stream().map(this::toDto).toList().reversed();
     }
 
+    /**
+     * Сохраняет сообщение с одним медиафайлом.
+     *
+     * <p>Метод создаёт сообщение, прикрепляет к нему один медиафайл
+     * и определяет тип сообщения на основе MIME-типа файла:
+     * {@link MessageType#IMAGE} для изображений и {@link MessageType#VIDEO}
+     * для видео.</p>
+     *
+     * <p>Путь к файлу, MIME-тип и исходное имя файла сохраняются в полях сообщения.
+     * Метод оставлен для поддержки старого формата медиа-сообщений, где одно
+     * сообщение могло содержать только один файл.</p>
+     *
+     * @param chat чат, в который отправляется медиа-сообщение
+     * @param sender пользователь, отправляющий сообщение
+     * @param mediaUrl публичный путь к сохранённому медиафайлу
+     * @param contentType MIME-тип файла, например {@code image/png} или {@code video/mp4}
+     * @param originalName исходное имя загруженного файла
+     * @return сохранённое сообщение с прикреплённым медиафайлом
+     * @throws RuntimeException если MIME-тип файла не является изображением или видео
+     */
     @Transactional
     public Message saveMediaMessage(Chat chat,
                                     User sender,
@@ -108,6 +130,21 @@ public class MessageService {
         return messageRepository.save(message);
     }
 
+    /**
+     * Сохраняет сообщение с одним или несколькими медиафайлами.
+     *
+     * <p>Метод создаёт основную запись сообщения, определяет его тип
+     * на основе прикреплённых файлов, сохраняет связанные {@link MessageMedia}
+     * и возвращает итоговое сообщение.</p>
+     *
+     * @param chat чат, в который отправляется сообщение
+     * @param sender пользователь, отправляющий сообщение
+     * @param text текстовая подпись к медиафайлам, может быть пустой
+     * @param mediaPaths публичные пути к сохранённым файлам
+     * @param files исходные загруженные файлы
+     * @return сохранённое сообщение со связанными медиафайлами
+     * @throws RuntimeException если сообщение не содержит ни текста, ни файлов
+     */
     @Transactional
     public Message saveMediaMessage(Chat chat,
                                     User sender,
@@ -165,5 +202,42 @@ public class MessageService {
         }
 
         return savedMessage;
+    }
+
+    /**
+     * Преобразует сущность сообщения в DTO для отправки на клиентскую сторону.
+     *
+     * <p>Метод использует базовое преобразование {@link Message#toMessageDTO()},
+     * после чего дополнительно заполняет данные профиля отправителя:
+     * путь к аватарке и отображаемое имя.</p>
+     *
+     * <p>Эти данные используются на странице чата для отображения аватарки
+     * пользователя рядом с сообщением и для корректного отображения мини-профиля.</p>
+     *
+     * @param message сообщение, которое необходимо преобразовать
+     * @return DTO сообщения с данными отправителя и его профиля
+     */
+    private MessageDTO toDto(Message message) {
+        MessageDTO dto = message.toMessageDTO();
+
+        usersProfileRepository.findByUser(message.getSender()).ifPresent(profile -> {
+            dto.setSenderAvatar(profile.getProfileImagePath());
+            dto.setSenderRealName(profile.getRealName());
+        });
+
+        return dto;
+    }
+
+    /**
+     * Преобразует сущность сообщения в DTO для отправки на клиент.
+     *
+     * <p>Дополнительно заполняет данные отправителя, такие как аватарка
+     * и отображаемое имя из профиля пользователя.</p>
+     *
+     * @param message сообщение для преобразования
+     * @return DTO сообщения
+     */
+    public MessageDTO convertToDto(Message message) {
+        return toDto(message);
     }
 }

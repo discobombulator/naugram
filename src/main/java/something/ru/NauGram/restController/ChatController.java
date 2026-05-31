@@ -131,7 +131,7 @@ public class ChatController {
         Chat chat = chatService.getChat(dto.getChatId());
 
         Message savedMessage = messageService.saveMessage(chat, sender, null, dto.getText());
-        MessageDTO response = savedMessage.toMessageDTO();
+        MessageDTO response = messageService.convertToDto(savedMessage);
 
         List<User> users = chatService.getChatParticipants(chat.getId());
 
@@ -200,6 +200,19 @@ public class ChatController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Загружает медиафайлы в чат и создаёт одно сообщение с вложениями.
+     *
+     * <p>Метод принимает список файлов и необязательную текстовую подпись.
+     * Каждый файл сохраняется на диск, после чего создаётся сообщение,
+     * связанное с этими медиафайлами. После сохранения сообщение рассылается
+     * всем участникам чата через WebSocket.</p>
+     *
+     * @param chatId идентификатор чата
+     * @param files список загружаемых файлов
+     * @param text текстовая подпись к медиа, может быть пустой
+     * @return HTTP-ответ с DTO созданного сообщения или текстом ошибки
+     */
     @PostMapping("/chats/{chatId}/media")
     @ResponseBody
     @Transactional

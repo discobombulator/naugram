@@ -32,9 +32,13 @@ public class MediaController {
     /**
      * Загружает и сохраняет аватар текущего пользователя.
      *
+     * <p>Метод принимает изображение из формы, сохраняет его через
+     * {@link MediaStorageService}, после чего обновляет путь к аватарке
+     * в профиле пользователя.</p>
+     *
      * @param avatar файл аватара
      * @param authentication данные текущей авторизации
-     * @param redirectAttributes flash-атрибуты для уведомлений
+     * @param redirectAttributes flash-атрибуты для уведомлений об успехе или ошибке
      * @return редирект на главную страницу
      */
     @PostMapping("/profile/avatar")

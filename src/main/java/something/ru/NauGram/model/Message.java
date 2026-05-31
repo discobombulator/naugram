@@ -62,6 +62,15 @@ public class Message {
         createdAt = LocalDateTime.now();
     }
 
+    /**
+     * Преобразует сущность сообщения в DTO.
+     *
+     * <p>Метод используется для передачи сообщения на клиентскую сторону.
+     * В DTO включаются текст, отправитель, чат, время создания, тип сообщения
+     * и связанные медиафайлы.</p>
+     *
+     * @return DTO сообщения
+     */
     public MessageDTO toMessageDTO() {
         MessageDTO m = new MessageDTO();
 

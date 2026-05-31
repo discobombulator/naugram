@@ -27,4 +27,6 @@ public class MessageDTO {
     private String mediaOriginalName;
 
     private List<MessageMediaDTO> mediaFiles;
+    private String senderAvatar;
+    private String senderRealName;
 }
