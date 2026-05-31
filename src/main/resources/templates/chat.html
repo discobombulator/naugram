@@ -2,7 +2,7 @@
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>NauGram - Chat</title>
+    <title th:text="#{chat.page.title}">NauGram - Chat</title>
 
     <style>
         * {
@@ -63,6 +63,14 @@
             font-weight: bold;
             font-size: 18px;
             flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .chat-avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
         }
 
         .chat-header-info {
@@ -103,7 +111,7 @@
         .messages-container {
             flex: 1;
             overflow-y: auto;
-            padding: 28px 12%;
+            padding: 28px 7%;
             display: flex;
             flex-direction: column;
             gap: 10px;
@@ -129,6 +137,20 @@
 
         .message-row.sent {
             justify-content: flex-end;
+        }
+
+        .message-wrapper {
+            display: flex;
+            flex-direction: column;
+            max-width: 460px;
+        }
+
+        .message-wrapper.mine {
+            align-items: flex-end;
+        }
+
+        .message-wrapper.other {
+            align-items: flex-start;
         }
 
         .message-bubble {
@@ -172,10 +194,32 @@
             text-align: right;
         }
 
+        .media-meta {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-top: 4px;
+            padding: 0 4px;
+            font-size: 11px;
+            color: #aaa;
+        }
+
+        .message-wrapper.mine .media-meta {
+            justify-content: flex-end;
+        }
+
+        .message-wrapper.other .media-meta {
+            justify-content: flex-start;
+        }
+
+        .message-wrapper.mine .media-meta span:first-child {
+            display: none;
+        }
+
         .chat-input-area {
             background: white;
             border-top: 1px solid #eee;
-            padding: 14px 12%;
+            padding: 14px 7%;
             display: flex;
             gap: 10px;
             flex-shrink: 0;
@@ -215,11 +259,539 @@
             background: #d96d2e;
         }
 
+        .media-btn {
+            width: 46px;
+            min-width: 46px;
+            height: 46px;
+            border: 2px solid #f5833d33;
+            border-radius: 14px;
+            background: white;
+            color: #f5833d;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: border-color 0.2s, background 0.2s, transform 0.2s;
+            font-family: inherit;
+        }
+
+        .media-btn:hover {
+            border-color: #f5833d;
+            background: #fff4ed;
+            transform: translateY(-1px);
+        }
+
+        .media-btn svg {
+            display: block;
+        }
+
         .empty-chat {
             margin: auto;
             color: #aaa;
             text-align: center;
             font-size: 15px;
+        }
+
+        .message-bubble.media-bubble {
+            padding: 6px;
+            max-width: 380px;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .message-row.sent .message-bubble.media-bubble {
+            background: transparent;
+        }
+
+        .message-row.received .message-bubble.media-bubble {
+            background: transparent;
+            border: none;
+        }
+
+        .message-media-grid {
+            display: grid;
+            gap: 4px;
+            overflow: hidden;
+            border-radius: 14px;
+            max-width: 360px;
+        }
+
+        .message-media-grid.media-count-1 {
+            display: block;
+        }
+
+        .message-media-grid.media-count-2 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .message-media-grid.media-count-3,
+        .message-media-grid.media-count-4 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .message-media-grid.media-count-5,
+        .message-media-grid.media-count-6 {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .message-media-img,
+        .message-media-video {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            display: block;
+            background: black;
+            cursor: pointer;
+        }
+
+        .message-media-grid.media-count-1 .message-media-img,
+        .message-media-grid.media-count-1 .message-media-video {
+            width: auto;
+            max-width: 340px;
+            max-height: 300px;
+            height: auto;
+            object-fit: contain;
+            border-radius: 14px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.10);
+        }
+
+        .media-message-text {
+            margin-top: 7px;
+            padding: 8px 10px;
+            background: white;
+            color: #222;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .message-row.sent .media-message-text {
+            background: #f5833d;
+            color: white;
+        }
+
+        .media-editor-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(247, 249, 251, 0.72);
+            backdrop-filter: blur(4px);
+            z-index: 3000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .media-editor-overlay.open {
+            display: flex;
+        }
+
+        .media-editor-modal {
+            width: 440px;
+            max-width: calc(100vw - 24px);
+            background: white;
+            color: #333;
+            border-radius: 20px;
+            border: 1px solid #f5833d22;
+            box-shadow: 0 14px 40px rgba(245, 131, 61, 0.16);
+            padding: 18px;
+        }
+
+        .media-editor-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 14px;
+        }
+
+        .media-editor-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #f5833d;
+        }
+
+        .media-editor-preview-wrap {
+            position: relative;
+            width: 100%;
+            height: 270px;
+            background: #f7f9fb;
+            border: 2px solid #f5833d22;
+            border-radius: 18px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .media-editor-preview {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .media-editor-preview img,
+        .media-editor-preview video {
+            max-width: 100%;
+            max-height: 270px;
+            object-fit: contain;
+            display: block;
+        }
+
+        .media-remove-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 30px;
+            height: 30px;
+            border: none;
+            background: white;
+            color: #f5833d;
+            font-size: 22px;
+            line-height: 28px;
+            cursor: pointer;
+            border-radius: 50%;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        .media-remove-btn:hover {
+            background: #fff4ed;
+            transform: scale(1.04);
+        }
+
+        .media-nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 34px;
+            height: 48px;
+            border: none;
+            background: rgba(255, 255, 255, 0.88);
+            color: #f5833d;
+            font-size: 34px;
+            cursor: pointer;
+            z-index: 2;
+            border-radius: 12px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.10);
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        .media-nav-btn:hover {
+            background: #fff4ed;
+        }
+
+        .media-nav-prev {
+            left: 10px;
+        }
+
+        .media-nav-next {
+            right: 10px;
+        }
+
+        .media-editor-hint {
+            color: #aaa;
+            font-size: 13px;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .document-checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #333;
+            font-size: 14px;
+            margin-top: 16px;
+            cursor: pointer;
+        }
+
+        .document-checkbox-row input {
+            width: 18px;
+            height: 18px;
+            accent-color: #f5833d;
+        }
+
+        .caption-label {
+            display: block;
+            color: #f5833d;
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 14px;
+            margin-bottom: 6px;
+        }
+
+        .caption-input-wrap {
+            display: flex;
+            align-items: center;
+        }
+
+        .caption-input {
+            width: 100%;
+            height: 46px;
+            border: 2px solid #f5833d33;
+            border-radius: 14px;
+            outline: none;
+            background: white;
+            color: #333;
+            padding: 0 14px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        .caption-input:focus {
+            border-color: #f5833d;
+        }
+
+        .media-thumbs {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+
+        .media-thumb {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid transparent;
+            background: #f7f9fb;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+
+        .media-thumb:hover {
+            transform: translateY(-1px);
+        }
+
+        .media-thumb.active {
+            border-color: #f5833d;
+        }
+
+        .media-thumb img,
+        .media-thumb video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .media-editor-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 16px;
+        }
+
+        .media-action-right {
+            display: flex;
+            gap: 10px;
+        }
+
+        .media-action-btn {
+            height: 40px;
+            border: none;
+            border-radius: 12px;
+            padding: 0 14px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        .media-action-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .media-action-btn.primary {
+            background: #f5833d;
+            color: white;
+        }
+
+        .media-action-btn.primary:hover {
+            background: #d96d2e;
+        }
+
+        .media-action-btn.secondary {
+            background: #fff4ed;
+            color: #f5833d;
+        }
+
+        .media-action-btn.secondary:hover {
+            background: #f5833d22;
+        }
+
+
+
+        .message-with-avatar {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+        }
+
+        .message-row.sent .message-with-avatar {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar-small {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: #f5833d;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            overflow: hidden;
+            flex-shrink: 0;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 3px 10px rgba(245, 131, 61, 0.18);
+        }
+
+        .message-avatar-small:hover {
+            transform: scale(1.06);
+            box-shadow: 0 5px 14px rgba(245, 131, 61, 0.25);
+        }
+
+        .message-avatar-small img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .mini-profile-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(247, 249, 251, 0.72);
+            backdrop-filter: blur(4px);
+            z-index: 3500;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mini-profile-overlay.open {
+            display: flex;
+        }
+
+        .mini-profile-card {
+            width: 390px;
+            max-width: calc(100vw - 24px);
+            background: white;
+            border-radius: 22px;
+            border: 1px solid #f5833d22;
+            box-shadow: 0 14px 40px rgba(245, 131, 61, 0.18);
+            padding: 24px 20px 18px;
+            position: relative;
+            color: #333;
+        }
+
+        .mini-profile-close {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 50%;
+            background: #fff4ed;
+            color: #f5833d;
+            font-size: 22px;
+            line-height: 30px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        .mini-profile-close:hover {
+            background: #f5833d22;
+            transform: scale(1.04);
+        }
+
+        .mini-profile-avatar {
+            width: 86px;
+            height: 86px;
+            border-radius: 50%;
+            background: #f5833d;
+            color: white;
+            margin: 8px auto 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 34px;
+            font-weight: 800;
+            overflow: hidden;
+        }
+
+        .mini-profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .mini-profile-name {
+            text-align: center;
+            font-size: 18px;
+            font-weight: 800;
+            color: #333;
+        }
+
+        .mini-profile-username {
+            margin-top: 3px;
+            text-align: center;
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        .mini-profile-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .mini-profile-action-btn {
+            flex: 1;
+            height: 42px;
+            border: none;
+            border-radius: 14px;
+            background: #fff4ed;
+            color: #f5833d;
+            font-weight: 800;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        .mini-profile-action-btn:hover {
+            background: #f5833d22;
+            transform: translateY(-1px);
+        }
+
+        .mini-profile-info {
+            margin-top: 18px;
+            border-top: 1px solid #f5833d22;
+            padding-top: 12px;
+        }
+
+        .mini-profile-row {
+            padding: 10px 2px;
+        }
+
+        .mini-profile-value {
+            font-size: 15px;
+            color: #333;
+            word-break: break-word;
+        }
+
+        .mini-profile-label {
+            margin-top: 3px;
+            font-size: 12px;
+            color: #aaa;
         }
 
         @media (max-width: 768px) {
@@ -243,6 +815,68 @@
             .send-btn {
                 min-width: 90px;
             }
+
+            .media-btn {
+                width: 44px;
+                min-width: 44px;
+                height: 44px;
+            }
+
+            .message-bubble.media-bubble {
+                max-width: 74vw;
+            }
+
+            .message-media-grid {
+                max-width: 72vw;
+            }
+
+            .message-media-grid.media-count-1 .message-media-img,
+            .message-media-grid.media-count-1 .message-media-video {
+                max-width: 72vw;
+                max-height: 240px;
+            }
+
+            .message-media-img,
+            .message-media-video {
+                height: 120px;
+            }
+
+            .media-editor-modal {
+                width: calc(100vw - 18px);
+                padding: 14px;
+            }
+
+            .media-editor-preview-wrap {
+                height: 240px;
+            }
+
+            .media-editor-preview img,
+            .media-editor-preview video {
+                max-height: 240px;
+            }
+
+            .media-editor-actions {
+                gap: 8px;
+            }
+
+            .media-action-right {
+                gap: 8px;
+            }
+
+            .media-action-btn {
+                padding: 0 10px;
+            }
+
+            .message-avatar-small {
+                width: 30px;
+                height: 30px;
+                font-size: 13px;
+            }
+
+            .mini-profile-card {
+                width: calc(100vw - 18px);
+                padding: 22px 16px 16px;
+            }
         }
     </style>
 </head>
@@ -250,25 +884,40 @@
 <body>
 
 <header class="chat-page-header">
-    <button class="back-btn" onclick="window.location.href='/'">←</button>
+    <button class="back-btn" onclick="window.location.href='/'" th:title="#{button.back}">←</button>
 
-    <div class="chat-avatar"
-         th:text="${selectedChat.chatName != null && !selectedChat.chatName.isBlank()
-            ? #strings.substring(selectedChat.chatName, 0, 1).toUpperCase()
-            : 'Ч'}">
-        Ч
+    <div class="chat-avatar">
+        <img th:if="${companionProfile != null
+                     && companionProfile.profileImagePath != null
+                     && !companionProfile.profileImagePath.isBlank()}"
+             th:src="${companionProfile.profileImagePath}"
+             class="chat-avatar-img"
+             alt="Avatar">
+
+        <span th:if="${companionProfile == null
+                      || companionProfile.profileImagePath == null
+                      || companionProfile.profileImagePath.isBlank()}"
+              th:text="${companion != null && companion.username != null && !companion.username.isBlank()
+                    ? #strings.substring(companion.username, 0, 1).toUpperCase()
+                    : (selectedChat.chatName != null && !selectedChat.chatName.isBlank()
+                        ? #strings.substring(selectedChat.chatName, 0, 1).toUpperCase()
+                        : 'Ч')}">
+            Ч
+        </span>
     </div>
 
     <div class="chat-header-info">
         <div class="chat-title"
-             th:text="${selectedChat.chatName != null && !selectedChat.chatName.isBlank()
-                ? selectedChat.chatName
-                : 'Чат #' + selectedChat.id}">
+             th:text="${companion != null && companion.username != null && !companion.username.isBlank()
+                ? '@' + companion.username
+                : (selectedChat.chatName != null && !selectedChat.chatName.isBlank()
+                    ? selectedChat.chatName
+                    : #messages.msg('chat.fallbackPrefix') + ' #' + selectedChat.id)}">
             Название чата
         </div>
 
         <div class="chat-subtitle">
-            <span th:text="${selectedChat.chatType == 'direct' ? 'Личный чат' : 'Групповой чат'}">
+            <span th:text="${selectedChat.chatType == 'direct' ? #messages.msg('chat.type.direct') : #messages.msg('chat.type.group')}">
                 Тип чата
             </span>
         </div>
@@ -281,22 +930,143 @@
         <div id="messagesContainer" class="messages-container">
             <div th:if="${messages == null || #lists.isEmpty(messages)}"
                  class="empty-chat"
-                 id="emptyChat">
+                 id="emptyChat"
+                 th:text="#{chat.messages.empty}">
                 Сообщений пока нет
             </div>
         </div>
 
         <div class="chat-input-area">
+            <input id="mediaInput"
+                   type="file"
+                   accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm"
+                   multiple
+                   style="display: none;"
+                   onchange="openMediaEditor()">
+
+            <button class="media-btn"
+                    onclick="document.getElementById('mediaInput').click()"
+                    type="button"
+                    th:title="#{chat.attach}">
+                <svg width="21"
+                     height="21"
+                     viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2"
+                     stroke-linecap="round"
+                     stroke-linejoin="round">
+                    <path d="M21.44 11.05 12.25 20.24a6 6 0 0 1-8.49-8.49L13.5 2.01a4 4 0 0 1 5.66 5.66L9.41 17.41a2 2 0 0 1-2.83-2.83L15.07 6.1"></path>
+                </svg>
+            </button>
+
             <input id="messageInput"
                    class="message-input"
                    type="text"
-                   placeholder="Введите сообщение...">
+                   th:placeholder="#{chat.input.placeholder}">
 
-            <button class="send-btn" onclick="sendMessage()">Отправить</button>
+            <button class="send-btn" onclick="sendMessage()" th:text="#{button.send}">Отправить</button>
         </div>
 
     </div>
 </main>
+
+<div id="mediaEditorOverlay" class="media-editor-overlay">
+    <div class="media-editor-modal">
+
+        <div class="media-editor-header">
+            <div class="media-editor-title" th:text="#{media.editor.title}">Отправка медиа</div>
+        </div>
+
+        <div class="media-editor-preview-wrap">
+            <button class="media-nav-btn media-nav-prev"
+                    type="button"
+                    onclick="showPreviousMedia()">
+                ‹
+            </button>
+
+            <div id="mediaEditorPreview" class="media-editor-preview"></div>
+
+            <button class="media-nav-btn media-nav-next"
+                    type="button"
+                    onclick="showNextMedia()">
+                ›
+            </button>
+
+            <button class="media-remove-btn"
+                    type="button"
+                    onclick="removeCurrentMedia()">
+                ×
+            </button>
+        </div>
+
+        <label class="caption-label" for="mediaCaptionInput" th:text="#{media.editor.caption}">Подпись</label>
+
+        <div class="caption-input-wrap">
+            <input id="mediaCaptionInput"
+                   class="caption-input"
+                   type="text"
+                   autocomplete="off"
+                   th:placeholder="#{media.editor.captionPlaceholder}">
+        </div>
+
+        <div id="mediaThumbs" class="media-thumbs"></div>
+
+        <div class="media-editor-actions">
+            <button type="button"
+                    class="media-action-btn secondary"
+                    onclick="addMoreMedia()"
+                    th:text="#{button.add}">
+                Добавить
+            </button>
+
+            <div class="media-action-right">
+                <button type="button"
+                        class="media-action-btn secondary"
+                        onclick="closeMediaEditor()"
+                        th:text="#{button.cancel}">
+                    Отмена
+                </button>
+
+                <button type="button"
+                        class="media-action-btn primary"
+                        onclick="sendMediaMessage()"
+                        th:text="#{button.send}">
+                    Отправить
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<div id="miniProfileOverlay" class="mini-profile-overlay" onclick="closeMiniProfile(event)">
+    <div class="mini-profile-card" onclick="event.stopPropagation()">
+        <button class="mini-profile-close" type="button" onclick="hideMiniProfile()">×</button>
+
+        <div class="mini-profile-avatar" id="miniProfileAvatar">U</div>
+
+        <div class="mini-profile-name" id="miniProfileName" th:text="#{profile.defaultUser}">Пользователь</div>
+        <div class="mini-profile-username" id="miniProfileUsername">@username</div>
+
+        <div class="mini-profile-actions">
+            <button type="button" class="mini-profile-action-btn" onclick="hideMiniProfile()" th:text="#{miniProfile.message}">Сообщение</button>
+        </div>
+
+        <div class="mini-profile-info">
+            <div class="mini-profile-row">
+                <div class="mini-profile-value" id="miniProfileBio">—</div>
+                <div class="mini-profile-label" th:text="#{profile.about}">О себе</div>
+            </div>
+
+            <div class="mini-profile-row">
+                <div class="mini-profile-value" id="miniProfileBirthDate">—</div>
+                <div class="mini-profile-label" th:text="#{miniProfile.birthDate}">Дата рождения</div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
@@ -305,8 +1075,20 @@
     const initialMessages = /*[[${messages}]]*/ [];
     const currentChatId = /*[[${selectedChat != null ? selectedChat.id : null}]]*/ null;
     const currentUserId = /*[[${currentUserId}]]*/ null;
+
+    const I18N = {
+        videoUnsupported: /*[[#{chat.video.unsupported}]]*/ "Ваш браузер не поддерживает видео.",
+        mediaSendFailed: /*[[#{chat.error.mediaSendFailed}]]*/ "Не удалось отправить медиа",
+        profileLoadFailed: /*[[#{chat.error.profileLoadFailed}]]*/ "Не удалось загрузить профиль",
+        defaultUser: /*[[#{profile.defaultUser}]]*/ "Пользователь",
+        usernameFallback: /*[[#{profile.usernameFallback}]]*/ "@username",
+        emptyValue: "—"
+    };
+
     const lastReadMessageId = /*[[${lastReadMessageId}]]*/ null;
     let stompClient = null;
+    let selectedMediaFiles = [];
+    let currentMediaIndex = 0;
 
     document.addEventListener("DOMContentLoaded", function () {
         for (let message of initialMessages) {
@@ -325,6 +1107,17 @@
                 if (event.key === "Enter") {
                     event.preventDefault();
                     sendMessage();
+                }
+            });
+        }
+
+        const captionInput = document.getElementById("mediaCaptionInput");
+
+        if (captionInput) {
+            captionInput.addEventListener("keypress", function (event) {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    sendMediaMessage();
                 }
             });
         }
@@ -496,16 +1289,423 @@
             });
         }
 
+        const messageContent = buildMessageContent(message);
+
+        const type = message.messageType || "TEXT";
+        const mediaFiles = message.mediaFiles || [];
+        const isMedia = type === "IMAGE" || type === "VIDEO" || type === "MIXED" || mediaFiles.length > 0 || message.mediaUrl;
+
+        const bubbleClass = isMedia
+            ? "message-bubble media-bubble"
+            : "message-bubble";
+
+        const avatarHtml = buildMessageAvatar(message);
+
         row.innerHTML = `
-            <div class="message-bubble">
-                ${!isMine ? `<div class="message-sender">${escapeHtml(message.sender)}</div>` : ""}
-                <div class="message-text">${escapeHtml(message.text)}</div>
-                <div class="message-time">${time}</div>
+            <div class="message-with-avatar">
+                ${avatarHtml}
+
+                <div class="message-wrapper ${isMine ? "mine" : "other"}">
+                    <div class="${bubbleClass}">
+                        ${!isMedia && !isMine ? `<div class="message-sender">${escapeHtml(message.sender)}</div>` : ""}
+                        ${messageContent}
+                        ${!isMedia ? `<div class="message-time">${time}</div>` : ""}
+                    </div>
+
+                    ${isMedia ? `
+                        <div class="media-meta">
+                            <span>${escapeHtml(message.sender || "")}</span>
+                            <span>${time}</span>
+                        </div>
+                    ` : ""}
+                </div>
             </div>
         `;
 
         container.appendChild(row);
         container.scrollTop = container.scrollHeight;
+    }
+
+    function buildMessageContent(message) {
+        const type = message.messageType || "TEXT";
+        const mediaFiles = message.mediaFiles || [];
+
+        if ((type === "IMAGE" || type === "VIDEO" || type === "MIXED" || mediaFiles.length > 0) && mediaFiles.length > 0) {
+            const mediaHtml = mediaFiles.map(media => {
+                if (media.mediaType === "photo") {
+                    return `
+                        <img class="message-media-img"
+                             src="${escapeAttribute(media.mediaPath)}"
+                             alt="image"
+                             loading="lazy"
+                             onclick="openMediaViewer('${escapeJs(media.mediaPath)}', 'image')">
+                    `;
+                }
+
+                if (media.mediaType === "video") {
+                    return `
+                        <video class="message-media-video"
+                               controls
+                               ondblclick="openMediaViewer('${escapeJs(media.mediaPath)}', 'video')">
+                            <source src="${escapeAttribute(media.mediaPath)}" type="video/mp4">
+                            ${escapeHtml(I18N.videoUnsupported)}
+                        </video>
+                    `;
+                }
+
+                return "";
+            }).join("");
+
+            return `
+                <div class="message-media-grid media-count-${Math.min(mediaFiles.length, 6)}">
+                    ${mediaHtml}
+                </div>
+                ${message.text ? `<div class="message-text media-message-text">${escapeHtml(message.text)}</div>` : ""}
+            `;
+        }
+
+        if (type === "IMAGE" && message.mediaUrl) {
+            return `
+                <img class="message-media-img"
+                     src="${escapeAttribute(message.mediaUrl)}"
+                     alt="${escapeAttribute(message.mediaOriginalName || 'image')}"
+                     loading="lazy"
+                     onclick="openMediaViewer('${escapeJs(message.mediaUrl)}', 'image')">
+            `;
+        }
+
+        if (type === "VIDEO" && message.mediaUrl) {
+            return `
+                <video class="message-media-video"
+                       controls
+                       ondblclick="openMediaViewer('${escapeJs(message.mediaUrl)}', 'video')">
+                    <source src="${escapeAttribute(message.mediaUrl)}"
+                            type="${escapeAttribute(message.mediaContentType || 'video/mp4')}">
+                    ${escapeHtml(I18N.videoUnsupported)}
+                </video>
+            `;
+        }
+
+        return `<div class="message-text">${escapeHtml(message.text)}</div>`;
+    }
+
+
+
+    function buildMessageAvatar(message) {
+        const senderId = message.senderId;
+
+        if (!senderId) {
+            return "";
+        }
+
+        const avatar = message.senderAvatar;
+        const username = message.sender || "?";
+        const firstLetter = username.length > 0 ? username.substring(0, 1).toUpperCase() : "?";
+
+        if (avatar) {
+            return `
+                <div class="message-avatar-small"
+                     onclick="openMiniProfile(${Number(senderId)})"
+                     title="@${escapeAttribute(username)}">
+                    <img src="${escapeAttribute(avatar)}" alt="avatar">
+                </div>
+            `;
+        }
+
+        return `
+            <div class="message-avatar-small"
+                 onclick="openMiniProfile(${Number(senderId)})"
+                 title="@${escapeAttribute(username)}">
+                ${escapeHtml(firstLetter)}
+            </div>
+        `;
+    }
+
+    function openMediaEditor() {
+        const input = document.getElementById("mediaInput");
+
+        if (!input.files || input.files.length === 0) {
+            return;
+        }
+
+        const newFiles = Array.from(input.files);
+
+        if (document.getElementById("mediaEditorOverlay").classList.contains("open")) {
+            selectedMediaFiles = selectedMediaFiles.concat(newFiles);
+        } else {
+            selectedMediaFiles = newFiles;
+            currentMediaIndex = 0;
+        }
+
+        input.value = "";
+
+        renderMediaEditor();
+
+        document.getElementById("mediaEditorOverlay").classList.add("open");
+        document.getElementById("mediaCaptionInput").focus();
+    }
+
+    function closeMediaEditor() {
+        selectedMediaFiles = [];
+        currentMediaIndex = 0;
+
+        document.getElementById("mediaInput").value = "";
+        document.getElementById("mediaCaptionInput").value = "";
+        document.getElementById("mediaEditorPreview").innerHTML = "";
+        document.getElementById("mediaThumbs").innerHTML = "";
+        document.getElementById("mediaEditorOverlay").classList.remove("open");
+    }
+
+    function renderMediaEditor() {
+        renderCurrentMediaPreview();
+        renderMediaThumbs();
+        updateMediaNavigationButtons();
+    }
+
+    function renderCurrentMediaPreview() {
+        const preview = document.getElementById("mediaEditorPreview");
+        preview.innerHTML = "";
+
+        if (selectedMediaFiles.length === 0) {
+            closeMediaEditor();
+            return;
+        }
+
+        const file = selectedMediaFiles[currentMediaIndex];
+        const url = URL.createObjectURL(file);
+
+        if (file.type.startsWith("image/")) {
+            const img = document.createElement("img");
+            img.src = url;
+            img.alt = file.name;
+            preview.appendChild(img);
+        } else if (file.type.startsWith("video/")) {
+            const video = document.createElement("video");
+            video.src = url;
+            video.controls = true;
+            video.muted = true;
+            preview.appendChild(video);
+        }
+    }
+
+    function renderMediaThumbs() {
+        const thumbs = document.getElementById("mediaThumbs");
+        thumbs.innerHTML = "";
+
+        if (selectedMediaFiles.length <= 1) {
+            return;
+        }
+
+        selectedMediaFiles.forEach((file, index) => {
+            const thumb = document.createElement("div");
+            thumb.className = "media-thumb " + (index === currentMediaIndex ? "active" : "");
+            thumb.onclick = function () {
+                currentMediaIndex = index;
+                renderMediaEditor();
+            };
+
+            const url = URL.createObjectURL(file);
+
+            if (file.type.startsWith("image/")) {
+                thumb.innerHTML = `<img src="${escapeAttribute(url)}" alt="">`;
+            } else if (file.type.startsWith("video/")) {
+                thumb.innerHTML = `<video src="${escapeAttribute(url)}" muted></video>`;
+            }
+
+            thumbs.appendChild(thumb);
+        });
+    }
+
+    function updateMediaNavigationButtons() {
+        const prev = document.querySelector(".media-nav-prev");
+        const next = document.querySelector(".media-nav-next");
+
+        const show = selectedMediaFiles.length > 1;
+
+        prev.style.display = show ? "block" : "none";
+        next.style.display = show ? "block" : "none";
+    }
+
+    function showPreviousMedia() {
+        if (selectedMediaFiles.length <= 1) {
+            return;
+        }
+
+        currentMediaIndex =
+            (currentMediaIndex - 1 + selectedMediaFiles.length) % selectedMediaFiles.length;
+
+        renderMediaEditor();
+    }
+
+    function showNextMedia() {
+        if (selectedMediaFiles.length <= 1) {
+            return;
+        }
+
+        currentMediaIndex =
+            (currentMediaIndex + 1) % selectedMediaFiles.length;
+
+        renderMediaEditor();
+    }
+
+    function removeCurrentMedia() {
+        if (selectedMediaFiles.length === 0) {
+            return;
+        }
+
+        selectedMediaFiles.splice(currentMediaIndex, 1);
+
+        if (selectedMediaFiles.length === 0) {
+            closeMediaEditor();
+            return;
+        }
+
+        if (currentMediaIndex >= selectedMediaFiles.length) {
+            currentMediaIndex = selectedMediaFiles.length - 1;
+        }
+
+        renderMediaEditor();
+    }
+
+    function addMoreMedia() {
+        document.getElementById("mediaInput").click();
+    }
+
+    function sendMediaMessage() {
+        if (currentChatId === null) {
+            return;
+        }
+
+        if (selectedMediaFiles.length === 0) {
+            return;
+        }
+
+        const caption = document.getElementById("mediaCaptionInput").value.trim();
+
+        const formData = new FormData();
+
+        selectedMediaFiles.forEach(file => {
+            formData.append("files", file);
+        });
+
+        formData.append("text", caption);
+
+        fetch("/chats/" + currentChatId + "/media", {
+            method: "POST",
+            body: formData
+        })
+            .then(async response => {
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(errorText || I18N.mediaSendFailed);
+                }
+
+                return response.json();
+            })
+            .then(() => {
+                closeMediaEditor();
+            })
+            .catch(error => {
+                console.error(error);
+                alert(error.message);
+            });
+    }
+
+
+
+    function openMiniProfile(userId) {
+        fetch("/api/users/" + userId + "/mini-profile")
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(I18N.profileLoadFailed);
+                }
+
+                return response.json();
+            })
+            .then(profile => {
+                renderMiniProfile(profile);
+                document.getElementById("miniProfileOverlay").classList.add("open");
+            })
+            .catch(error => {
+                console.error(error);
+                alert(error.message);
+            });
+    }
+
+    function renderMiniProfile(profile) {
+        const avatar = document.getElementById("miniProfileAvatar");
+        const name = document.getElementById("miniProfileName");
+        const username = document.getElementById("miniProfileUsername");
+        const bio = document.getElementById("miniProfileBio");
+        const birthDate = document.getElementById("miniProfileBirthDate");
+
+        const displayName =
+            profile.realName && profile.realName.trim() !== ""
+                ? profile.realName
+                : profile.username;
+
+        name.textContent = displayName || I18N.defaultUser;
+        username.textContent = profile.username ? "@" + profile.username : I18N.usernameFallback;
+        bio.textContent = profile.bio && profile.bio.trim() !== "" ? profile.bio : I18N.emptyValue;
+        birthDate.textContent = profile.birthDate ? formatBirthDate(profile.birthDate) : I18N.emptyValue;
+
+        avatar.innerHTML = "";
+
+        if (profile.avatarPath) {
+            const img = document.createElement("img");
+            img.src = profile.avatarPath;
+            img.alt = "avatar";
+            avatar.appendChild(img);
+        } else {
+            avatar.textContent = profile.username
+                ? profile.username.substring(0, 1).toUpperCase()
+                : "U";
+        }
+    }
+
+    function hideMiniProfile() {
+        document.getElementById("miniProfileOverlay").classList.remove("open");
+    }
+
+    function closeMiniProfile(event) {
+        if (event.target.id === "miniProfileOverlay") {
+            hideMiniProfile();
+        }
+    }
+
+    function formatBirthDate(value) {
+        const date = new Date(value);
+
+        if (Number.isNaN(date.getTime())) {
+            return value;
+        }
+
+        return date.toLocaleDateString("ru-RU", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric"
+        });
+    }
+
+    function openMediaViewer(url, type) {
+        const back = "/chats/" + currentChatId;
+
+        window.location.href =
+            "/media-viewer?url=" + encodeURIComponent(url)
+            + "&type=" + encodeURIComponent(type)
+            + "&back=" + encodeURIComponent(back);
+    }
+
+    function escapeAttribute(value) {
+        if (value === null || value === undefined) {
+            return "";
+        }
+
+        return String(value)
+            .replaceAll("&", "&amp;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;");
     }
 
     function escapeHtml(value) {
@@ -519,6 +1719,19 @@
             .replaceAll(">", "&gt;")
             .replaceAll('"', "&quot;")
             .replaceAll("'", "&#039;");
+    }
+
+    function escapeJs(value) {
+        if (value === null || value === undefined) {
+            return "";
+        }
+
+        return String(value)
+            .replaceAll("\\", "\\\\")
+            .replaceAll("'", "\\'")
+            .replaceAll('"', '\\"')
+            .replaceAll("\n", "\\n")
+            .replaceAll("\r", "\\r");
     }
 
     window.addEventListener("beforeunload", function () {

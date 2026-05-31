@@ -120,4 +120,12 @@ public class ChatService {
 
         return chat.getId();
     }
+
+    public User getCompanion(Chat chat, User currentUser) {
+        return getChatParticipants(chat.getId())
+                .stream()
+                .filter(user -> !user.getId().equals(currentUser.getId()))
+                .findFirst()
+                .orElse(null);
+    }
 }
