@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import something.ru.NauGram.dto.MessageDTO;
 import something.ru.NauGram.model.Chat;
 import something.ru.NauGram.model.Message;
+import something.ru.NauGram.model.MessageType;
 import something.ru.NauGram.model.User;
 import something.ru.NauGram.repository.MessageRepository;
 
@@ -76,5 +77,32 @@ public class MessageService {
                 chatId,
                 PageRequest.of(0, MESSAGE_NUMBER)
         ).stream().map(Message::toMessageDTO).toList().reversed();
+    }
+
+    @Transactional
+    public Message saveMediaMessage(Chat chat,
+                                    User sender,
+                                    String mediaUrl,
+                                    String contentType,
+                                    String originalName) {
+        Message message = new Message();
+
+        message.setChat(chat);
+        message.setSender(sender);
+        message.setMessageText(originalName);
+
+        if (contentType != null && contentType.startsWith("image/")) {
+            message.setMessageType(MessageType.IMAGE);
+        } else if (contentType != null && contentType.startsWith("video/")) {
+            message.setMessageType(MessageType.VIDEO);
+        } else {
+            throw new RuntimeException("Неподдерживаемый тип медиа");
+        }
+
+        message.setMediaUrl(mediaUrl);
+        message.setMediaContentType(contentType);
+        message.setMediaOriginalName(originalName);
+
+        return messageRepository.save(message);
     }
 }

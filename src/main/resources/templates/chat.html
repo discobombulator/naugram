@@ -63,6 +63,14 @@
             font-weight: bold;
             font-size: 18px;
             flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .chat-avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
         }
 
         .chat-header-info {
@@ -221,6 +229,77 @@
             text-align: center;
             font-size: 15px;
         }
+        .media-btn {
+            width: 46px;
+            min-width: 46px;
+            height: 46px;
+            border: 2px solid #f5833d33;
+            border-radius: 14px;
+            background: white;
+            color: #f5833d;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: border-color 0.2s, background 0.2s, transform 0.2s;
+            font-family: inherit;
+        }
+
+        .media-btn:hover {
+            border-color: #f5833d;
+            background: #fff4ed;
+            transform: translateY(-1px);
+        }
+
+        .media-btn svg {
+            display: block;
+        }
+
+        .message-bubble.media-bubble {
+            padding: 6px;
+            max-width: 300px;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .message-row.sent .message-bubble.media-bubble {
+            background: transparent;
+        }
+
+        .message-row.received .message-bubble.media-bubble {
+            background: transparent;
+            border: none;
+        }
+
+        .message-media-img {
+            display: block;
+            width: auto;
+            height: auto;
+            max-width: 280px;
+            max-height: 280px;
+            object-fit: contain;
+            border-radius: 14px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.10);
+        }
+
+        .message-media-video {
+            display: block;
+            width: auto;
+            height: auto;
+            max-width: 320px;
+            max-height: 280px;
+            border-radius: 14px;
+            background: black;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.10);
+        }
+
+        .media-caption {
+            margin-top: 6px;
+            padding: 0 4px 2px;
+            font-size: 12px;
+            opacity: 0.75;
+            word-break: break-word;
+        }
 
         @media (max-width: 768px) {
             .chat-page-header {
@@ -243,6 +322,26 @@
             .send-btn {
                 min-width: 90px;
             }
+
+            .media-btn {
+                width: 44px;
+                min-width: 44px;
+                height: 44px;
+            }
+
+            .message-bubble.media-bubble {
+                max-width: 74vw;
+            }
+
+            .message-media-img {
+                max-width: 72vw;
+                max-height: 240px;
+            }
+
+            .message-media-video {
+                max-width: 72vw;
+                max-height: 240px;
+            }
         }
     </style>
 </head>
@@ -252,18 +351,33 @@
 <header class="chat-page-header">
     <button class="back-btn" onclick="window.location.href='/'">←</button>
 
-    <div class="chat-avatar"
-         th:text="${selectedChat.chatName != null && !selectedChat.chatName.isBlank()
-            ? #strings.substring(selectedChat.chatName, 0, 1).toUpperCase()
-            : 'Ч'}">
-        Ч
+    <div class="chat-avatar">
+        <img th:if="${companionProfile != null
+                     && companionProfile.profileImagePath != null
+                     && !companionProfile.profileImagePath.isBlank()}"
+             th:src="${companionProfile.profileImagePath}"
+             class="chat-avatar-img"
+             alt="Avatar">
+
+        <span th:if="${companionProfile == null
+                      || companionProfile.profileImagePath == null
+                      || companionProfile.profileImagePath.isBlank()}"
+              th:text="${companion != null && companion.username != null && !companion.username.isBlank()
+                    ? #strings.substring(companion.username, 0, 1).toUpperCase()
+                    : (selectedChat.chatName != null && !selectedChat.chatName.isBlank()
+                        ? #strings.substring(selectedChat.chatName, 0, 1).toUpperCase()
+                        : 'Ч')}">
+            Ч
+        </span>
     </div>
 
     <div class="chat-header-info">
         <div class="chat-title"
-             th:text="${selectedChat.chatName != null && !selectedChat.chatName.isBlank()
-                ? selectedChat.chatName
-                : 'Чат #' + selectedChat.id}">
+             th:text="${companion != null && companion.username != null && !companion.username.isBlank()
+                ? '@' + companion.username
+                : (selectedChat.chatName != null && !selectedChat.chatName.isBlank()
+                    ? selectedChat.chatName
+                    : 'Чат #' + selectedChat.id)}">
             Название чата
         </div>
 
@@ -287,6 +401,28 @@
         </div>
 
         <div class="chat-input-area">
+            <input id="mediaInput"
+                   type="file"
+                   accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm"
+                   style="display: none;"
+                   onchange="uploadMedia()">
+
+            <button class="media-btn"
+                    onclick="document.getElementById('mediaInput').click()"
+                    type="button"
+                    title="Прикрепить файл">
+                <svg width="21"
+                     height="21"
+                     viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2"
+                     stroke-linecap="round"
+                     stroke-linejoin="round">
+                    <path d="M21.44 11.05 12.25 20.24a6 6 0 0 1-8.49-8.49L13.5 2.01a4 4 0 0 1 5.66 5.66L9.41 17.41a2 2 0 0 1-2.83-2.83L15.07 6.1"></path>
+                </svg>
+            </button>
+
             <input id="messageInput"
                    class="message-input"
                    type="text"
@@ -396,16 +532,60 @@
             });
         }
 
+        const messageContent = buildMessageContent(message);
+
+        const type = message.messageType || "TEXT";
+        const bubbleClass = type === "IMAGE" || type === "VIDEO"
+            ? "message-bubble media-bubble"
+            : "message-bubble";
+
         row.innerHTML = `
-            <div class="message-bubble">
-                ${!isMine ? `<div class="message-sender">${escapeHtml(message.sender)}</div>` : ""}
-                <div class="message-text">${escapeHtml(message.text)}</div>
-                <div class="message-time">${time}</div>
-            </div>
-        `;
+    <div class="${bubbleClass}">
+        ${!isMine ? `<div class="message-sender">${escapeHtml(message.sender)}</div>` : ""}
+        ${messageContent}
+        <div class="message-time">${time}</div>
+    </div>
+`;
 
         container.appendChild(row);
         container.scrollTop = container.scrollHeight;
+    }
+
+    function buildMessageContent(message) {
+        const type = message.messageType || "TEXT";
+
+        if (type === "IMAGE") {
+            return `
+            <img class="message-media-img"
+                 src="${escapeAttribute(message.mediaUrl)}"
+                 alt="${escapeAttribute(message.mediaOriginalName || 'image')}">
+        `;
+        }
+
+        if (type === "VIDEO") {
+            return `
+            <video class="message-media-video" controls>
+                <source src="${escapeAttribute(message.mediaUrl)}"
+                        type="${escapeAttribute(message.mediaContentType || 'video/mp4')}">
+                Ваш браузер не поддерживает видео.
+            </video>
+            ${message.mediaOriginalName ? `<div class="media-caption">${escapeHtml(message.mediaOriginalName)}</div>` : ""}
+        `;
+        }
+
+        return `<div class="message-text">${escapeHtml(message.text)}</div>`;
+    }
+
+    function escapeAttribute(value) {
+        if (value === null || value === undefined) {
+            return "";
+        }
+
+        return String(value)
+            .replaceAll("&", "&amp;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;");
     }
 
     function escapeHtml(value) {
@@ -426,6 +606,42 @@
             stompClient.disconnect();
         }
     });
+
+    function uploadMedia() {
+        if (currentChatId === null) {
+            return;
+        }
+
+        const input = document.getElementById("mediaInput");
+        const file = input.files[0];
+
+        if (!file) {
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        fetch("/chats/" + currentChatId + "/media", {
+            method: "POST",
+            body: formData
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Не удалось загрузить файл");
+                }
+
+                return response.json();
+            })
+            .then(() => {
+                input.value = "";
+            })
+            .catch(error => {
+                console.error(error);
+                alert(error.message);
+                input.value = "";
+            });
+    }
 </script>
 
 </body>

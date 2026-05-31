@@ -10,16 +10,15 @@ import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import something.ru.NauGram.dto.CreateChatDTO;
 import something.ru.NauGram.dto.MessageDTO;
 import something.ru.NauGram.dto.UserSearchDTO;
 import something.ru.NauGram.model.Chat;
 import something.ru.NauGram.model.Message;
 import something.ru.NauGram.model.User;
-import something.ru.NauGram.service.ChatParticipantService;
-import something.ru.NauGram.service.ChatService;
-import something.ru.NauGram.service.MessageService;
-import something.ru.NauGram.service.UserService;
+import something.ru.NauGram.model.UsersProfile;
+import something.ru.NauGram.service.*;
 
 import java.security.Principal;
 import java.util.List;
@@ -39,6 +38,8 @@ public class ChatController {
     private final ChatParticipantService chatParticipantService;
     private final MessageService messageService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final UserProfileService userProfileService;
+    private final MediaStorageService mediaStorageService;
 
     /**
      * Отображает страницу со списком всех чатов текущего пользователя.
@@ -74,6 +75,14 @@ public class ChatController {
         }
 
         Chat chat = chatService.getChat(chatId);
+        User companion = chatService.getCompanion(chat, currentUser);
+
+        UsersProfile companionProfile = companion != null
+                ? userProfileService.findByUser(companion).orElse(null)
+                : null;
+
+        model.addAttribute("companion", companion);
+        model.addAttribute("companionProfile", companionProfile);
 
         model.addAttribute("selectedChat", chat);
         model.addAttribute("messages", messageService.getInitialMessages(chat.getId()));
@@ -187,6 +196,50 @@ public class ChatController {
 
         Long response =
                 chatService.createChat(request, userService.getCurrentUser());
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/chats/{chatId}/media")
+    @ResponseBody
+    @Transactional
+    public ResponseEntity<?> uploadChatMedia(@PathVariable Long chatId,
+                                             @RequestParam("file") MultipartFile file) {
+        User currentUser = userService.getCurrentUser();
+
+        if (currentUser == null) {
+            return ResponseEntity.status(401).body("Unauthorized");
+        }
+
+        boolean allowed = chatParticipantService.isParticipant(chatId, currentUser.getId());
+
+        if (!allowed) {
+            return ResponseEntity.status(403).body("You are not participant of this chat");
+        }
+
+        Chat chat = chatService.getChat(chatId);
+
+        String mediaUrl = mediaStorageService.saveChatMedia(chatId, file);
+
+        Message savedMessage = messageService.saveMediaMessage(
+                chat,
+                currentUser,
+                mediaUrl,
+                file.getContentType(),
+                file.getOriginalFilename()
+        );
+
+        MessageDTO response = savedMessage.toMessageDTO();
+
+        List<User> users = chatService.getChatParticipants(chat.getId());
+
+        for (User user : users) {
+            messagingTemplate.convertAndSendToUser(
+                    user.getEmail(),
+                    "/queue/chat/" + chat.getId(),
+                    response
+            );
+        }
 
         return ResponseEntity.ok(response);
     }

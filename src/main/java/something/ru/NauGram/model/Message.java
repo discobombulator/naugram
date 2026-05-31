@@ -41,6 +41,16 @@ public class Message {
 
     private Boolean isEdited;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private MessageType messageType = MessageType.TEXT;
+
+    private String mediaUrl;
+
+    private String mediaContentType;
+
+    private String mediaOriginalName;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -53,6 +63,11 @@ public class Message {
         m.setSenderId(sender.getId());
         m.setChatId(chat.getId());
         m.setTimestamp(String.valueOf(createdAt));
+
+        m.setMessageType(messageType.name());
+        m.setMediaUrl(mediaUrl);
+        m.setMediaContentType(mediaContentType);
+        m.setMediaOriginalName(mediaOriginalName);
         return m;
     }
 }

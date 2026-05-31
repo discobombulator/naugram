@@ -18,4 +18,9 @@ public class MessageDTO {
     private Long senderId;
     private long chatId;
     private String timestamp;
+
+    private String messageType;
+    private String mediaUrl;
+    private String mediaContentType;
+    private String mediaOriginalName;
 }
