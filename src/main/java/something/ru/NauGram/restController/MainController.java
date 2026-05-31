@@ -10,13 +10,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.servlet.LocaleResolver;
 import something.ru.NauGram.dto.ChatUpdateDTO;
-import something.ru.NauGram.model.Chat;
-import something.ru.NauGram.model.User;
-import something.ru.NauGram.model.UsersProfile;
-import something.ru.NauGram.service.ChatLastReadService;
-import something.ru.NauGram.service.ChatService;
-import something.ru.NauGram.service.UserProfileService;
-import something.ru.NauGram.service.UserService;
+import something.ru.NauGram.model.*;
+import something.ru.NauGram.service.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +26,8 @@ public class MainController {
     private final UserProfileService userProfileService;
     private final ChatLastReadService chatLastReadService;
     private final ChatService chatService;
-
+    private final ChatParticipantService chatParticipantService;
+    private final MessageService messageService;
     private final LocaleResolver localeResolver;
 
     /**
@@ -41,10 +37,7 @@ public class MainController {
      * @return имя шаблона главной страницы
      */
     @GetMapping("/")
-    public String showMainPage(Model model,
-                               Authentication authentication,
-                               HttpServletRequest request,
-                               HttpServletResponse response) {
+    public String showMainPage(Model model, Authentication authentication, HttpServletRequest request, HttpServletResponse response) {
         User currentUser = userService.findByEmail(authentication.getName());
 
         if (currentUser == null) {
@@ -57,11 +50,7 @@ public class MainController {
             currentLanguage = currentUser.getLanguage();
         }
 
-        localeResolver.setLocale(
-                request,
-                response,
-                Locale.forLanguageTag(currentLanguage)
-        );
+        localeResolver.setLocale(request, response, Locale.forLanguageTag(currentLanguage));
 
         Optional<UsersProfile> currentUserProfileOptional = userProfileService.findByUser(currentUser);
         UsersProfile currentUserProfile = currentUserProfileOptional.orElse(null);
@@ -79,15 +68,24 @@ public class MainController {
 
         List<ChatUpdateDTO> initLastReadMessages = new ArrayList<>();
         for (Chat chat : chats) {
-            initLastReadMessages.add(
-                    new ChatUpdateDTO(
-                            chat.getId(),
-                            chatLastReadService.getLastMessage(currentUser, chat),
-                            chatLastReadService.getUnreadMessages(currentUser, chat)
-                    )
-            );
+            try {
+                ChatParticipant cp = chatParticipantService.getChatParticipant(chat, currentUser);
+                Message chatLastMessage =
+                        messageService.getLastMessages(chat.getId(), 1).getFirst();
+                initLastReadMessages.add(
+                        new ChatUpdateDTO(
+                                chat.getId(),
+                                chatLastMessage.getMessageText(),
+                                chatLastReadService.getUnreadMessages(cp)
+                        )
+                );
+            } catch (IllegalArgumentException e) {
+                log.error(e.toString());
+            } catch (Exception e) {
+                log.info("There're now messages in chat {}", chat.getId());
+            }
         }
-        log.info("{}", initLastReadMessages);
+        log.info("init last read messages{}", initLastReadMessages);
         model.addAttribute("firstName", firstName);
         model.addAttribute("lastName", lastName);
         model.addAttribute("currentLanguage", currentLanguage);

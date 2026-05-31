@@ -3,7 +3,6 @@ package something.ru.NauGram.model;
 import jakarta.persistence.*;
 import lombok.Data;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -41,7 +40,7 @@ public class User {
 
     public User() {
         super();
-        this.enabled=false;
+        this.enabled = false;
         this.faStatus = false;
         this.language = "ru";
     }

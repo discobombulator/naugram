@@ -12,7 +12,7 @@ import java.util.List;
  * и личным (chatType=direct).<p/>
  * <p>id, chatType - обязательные поля<p/>
  * <p>chatName, description, imagePath - могут быть null
- *  для direct чатов <p/>
+ * для direct чатов <p/>
  */
 @Entity
 @Data

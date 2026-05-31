@@ -6,7 +6,6 @@ import lombok.Getter;
 import something.ru.NauGram.dto.MessageDTO;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 /**
  * Сущность сообщения в чате.
@@ -48,6 +47,7 @@ public class Message {
 
     public MessageDTO toMessageDTO() {
         MessageDTO m = new MessageDTO();
+        m.setId(id);
         m.setText(messageText);
         m.setSender(sender.getUsername());
         m.setSenderId(sender.getId());

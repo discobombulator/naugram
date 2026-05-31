@@ -1,5 +1,6 @@
 package something.ru.NauGram.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -17,9 +18,12 @@ import java.util.List;
  * Предоставляет методы для сохранения новых сообщений и получения
  * последних сообщений чата с ограничением по количеству.
  */
+@Slf4j
 @Service
 public class MessageService {
-    /** Количество последних сообщений, возвращаемых при начальной загрузке чата */
+    /**
+     * Количество последних сообщений, возвращаемых при начальной загрузке чата
+     */
     private final int MESSAGE_NUMBER = 50;
 
     private final MessageRepository messageRepository;
@@ -69,12 +73,20 @@ public class MessageService {
      *
      * @param chatId идентификатор чата, для которого запрашиваются сообщения
      * @return список DTO сообщений в хронологическом порядке (от старых к новым),
-     *         содержащий не более {@link #MESSAGE_NUMBER} последних сообщений
+     * содержащий не более {@link #MESSAGE_NUMBER} последних сообщений
      */
     public List<MessageDTO> getInitialMessages(Long chatId) {
+        return getLastMessages(chatId, MESSAGE_NUMBER).stream().map(Message::toMessageDTO).toList().reversed();
+    }
+
+    public List<Message> getLastMessages(Long chatId, int numberMessages) {
         return messageRepository.findLastMessagesByChatId(
                 chatId,
-                PageRequest.of(0, MESSAGE_NUMBER)
-        ).stream().map(Message::toMessageDTO).toList().reversed();
+                PageRequest.of(0, numberMessages)
+        );
+    }
+
+    public Long getFirstMessage(Chat chat) {
+        return messageRepository.findFirstMessageByChatId(chat.getId()).getFirst().getId();
     }
 }

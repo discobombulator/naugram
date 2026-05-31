@@ -4,6 +4,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
+import something.ru.NauGram.model.Chat;
 import something.ru.NauGram.model.Message;
 
 import java.util.List;
@@ -19,8 +20,33 @@ public interface MessageRepository extends CrudRepository<Message, Long> {
      * @return список сообщений указанного чата, отсортированных по убыванию идентификатора,
      * ограниченный параметрами пагинации
      */
-    @Query("SELECT m FROM Message m WHERE m.chat.id = :chatId ORDER BY m.id DESC")
+    @Query("""
+                SELECT m
+                FROM Message m
+                WHERE m.chat.id = :chatId
+                ORDER BY m.id DESC
+            """)
     List<Message> findLastMessagesByChatId(@Param("chatId") Long chatId, PageRequest pageable);
 
-    List<Message> findTop50ByChatIdOrderByCreatedAtAsc(Long chatId);
+    @Query("""
+                select count(m)
+                from Message m
+                where m.chat = :chat
+                  and m.id > :lastReadMessageId
+            """)
+    int countUnreadMessages(
+            @Param("chat") Chat chat,
+            @Param("lastReadMessageId")
+            Long lastReadMessageId
+    );
+
+    int countByChat(Chat chat);
+
+    @Query("""
+                SELECT m
+                FROM Message m
+                WHERE m.chat.id = :chatId
+                ORDER BY m.id ASC
+            """)
+    List<Message> findFirstMessageByChatId(@Param("chatId") Long chatId);
 }

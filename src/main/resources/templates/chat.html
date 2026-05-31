@@ -305,13 +305,16 @@
     const initialMessages = /*[[${messages}]]*/ [];
     const currentChatId = /*[[${selectedChat != null ? selectedChat.id : null}]]*/ null;
     const currentUserId = /*[[${currentUserId}]]*/ null;
-
+    const lastReadMessageId = /*[[${lastReadMessageId}]]*/ null;
     let stompClient = null;
 
     document.addEventListener("DOMContentLoaded", function () {
         for (let message of initialMessages) {
             displayMessage(message);
+            console.log(message.id, message.text)
         }
+
+        scrollToLastRead();
 
         connect();
 
@@ -327,6 +330,101 @@
         }
     });
 
+    function scrollToLastRead() {
+
+        if (!lastReadMessageId) {
+            return;
+        }
+
+        const container =
+            document.getElementById(
+                "messagesContainer"
+            );
+
+        const target =
+            container.querySelector(
+                `[data-message-id="${lastReadMessageId}"]`
+            );
+
+        if (!target) {
+             console.log("Cant'center")
+            return;
+        }
+
+        target.scrollIntoView({
+            behavior: "auto",
+            block: "center"
+        });
+    }
+
+    function getBottomNearestMessageId() {
+        const container =
+            document.getElementById(
+                "messagesContainer"
+            );
+
+        const rows =
+            container.querySelectorAll(
+                ".message-row"
+            );
+
+        if (!rows.length) {
+            return null;
+        }
+
+        // visible bottom of container
+        const bottom =
+            container.getBoundingClientRect()
+                .bottom;
+
+        let closest = null;
+        let minDistance = Infinity;
+
+        rows.forEach(row => {
+
+            const rect =
+                row.getBoundingClientRect();
+
+            // row bottom
+            const distance =
+                Math.abs(
+                    rect.bottom - bottom
+                );
+
+            if (distance < minDistance) {
+
+                minDistance =
+                    distance;
+
+                closest =
+                    row.dataset.messageId;
+            }
+        });
+
+        return closest;
+    }
+
+    function sendReadMarker() {
+
+        const messageId =
+            getBottomNearestMessageId();
+        console.log("nearest to the bottom" + messageId)
+        if (
+            !messageId ||
+            !stompClient
+        ) {
+            return;
+        }
+
+        stompClient.send(
+            "/app/chat.read",
+            {},
+            JSON.stringify({
+                chatId: currentChatId,
+                messageId: Number(messageId)
+            })
+        );
+    }
     function connect() {
         const socket = new SockJS('/ws');
         stompClient = Stomp.over(socket);
@@ -334,6 +432,7 @@
         stompClient.connect({}, function () {
             if (currentChatId !== null) {
                 subscribeToChat(currentChatId);
+                sendReadMarker()
             }
         }, function (error) {
             console.error("STOMP error:", error);
@@ -384,6 +483,7 @@
 
         const row = document.createElement("div");
         const isMine = Number(message.senderId) === Number(currentUserId);
+        row.dataset.messageId = message.id;
 
         row.className = "message-row " + (isMine ? "sent" : "received");
 
@@ -426,6 +526,39 @@
             stompClient.disconnect();
         }
     });
+    let readTimeout = null;
+
+    const container =
+        document.getElementById(
+            "messagesContainer"
+        );
+
+    container.addEventListener(
+        "scroll",
+        function () {
+
+            clearTimeout(
+                readTimeout
+            );
+
+            readTimeout =
+                setTimeout(
+                    sendReadMarker,
+                    400
+                );
+        }
+    );
+    window.addEventListener(
+        "beforeunload",
+        function () {
+
+            sendReadMarker();
+
+            if (stompClient) {
+                stompClient.disconnect();
+            }
+        }
+    );
 </script>
 
 </body>
