@@ -447,17 +447,7 @@
         }
 
         /* ─── Уведомления ─── */
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 14px 22px;
-            border-radius: 12px;
-            font-size: 15px;
-            font-weight: bold;
-            z-index: 1000;
-            animation: fadeIn 0.3s ease;
-        }
+
 
         .notification.error {
             background: #ff4d4d;
@@ -753,7 +743,8 @@
 
         <a th:each="chat : ${chats}"
            class="chat-item chat-link"
-           th:href="@{/chats/{id}(id=${chat.id})}">
+           th:href="@{/chats/{id}(id=${chat.id})}"
+           th:data-chat-id="${chat.id}">
 
             <div class="chat-avatar"
                  th:text="${chat.chatName != null && !chat.chatName.isBlank()
@@ -902,7 +893,7 @@
     console.log(initialChatLastMessages)
 </script>
 
-<script>
+<script th:inline="javascript">
     function togglePanel(type) {
         const sp = document.getElementById('settingsPanel');
         const pp = document.getElementById('profilePanel');
@@ -937,7 +928,7 @@
 
 </script>
 
-<script>
+<script th:inline="javascript">
     setTimeout(() => {
         document.querySelectorAll('.notification').forEach(notification => {
             notification.style.opacity = '0';

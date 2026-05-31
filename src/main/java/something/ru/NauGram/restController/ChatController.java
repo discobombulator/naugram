@@ -80,14 +80,26 @@ public class ChatController {
         }
 
         Chat chat = chatService.getChat(chatId);
-        Long lastReadMessageId;
+        Long lastReadMessageId = null;
         try{
             ChatParticipant cp = chatParticipantService.getChatParticipant(chat, user);
             lastReadMessageId = chatLastReadService.getLastMessageId(cp);
         } catch (Exception e) {
-            lastReadMessageId = messageService.getFirstMessage(chat);
+
         }
-        log.info("last message id {}", lastReadMessageId);
+        if (lastReadMessageId == null){
+            try {
+                lastReadMessageId = messageService.getFirstMessage(chat);
+            } catch (Exception ex) {
+
+            }
+        }
+
+        if (lastReadMessageId != null){
+            model.addAttribute("lastReadMessageId", lastReadMessageId);
+            log.info("last message id {}", lastReadMessageId);
+        }
+
         User companion = chatService.getCompanion(chat, user);
 
         UsersProfile companionProfile = companion != null
@@ -102,7 +114,6 @@ public class ChatController {
         model.addAttribute("currentUser", user);
         model.addAttribute("currentUserId", user.getId());
         model.addAttribute("currentUsername", user.getUsername());
-        model.addAttribute("lastReadMessageId", lastReadMessageId);
 
         return "chat";
     }
