@@ -10,16 +10,15 @@ import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import something.ru.NauGram.dto.CreateChatDTO;
 import something.ru.NauGram.dto.MessageDTO;
 import something.ru.NauGram.dto.UserSearchDTO;
 import something.ru.NauGram.model.Chat;
 import something.ru.NauGram.model.Message;
 import something.ru.NauGram.model.User;
-import something.ru.NauGram.service.ChatParticipantService;
-import something.ru.NauGram.service.ChatService;
-import something.ru.NauGram.service.MessageService;
-import something.ru.NauGram.service.UserService;
+import something.ru.NauGram.model.UsersProfile;
+import something.ru.NauGram.service.*;
 
 import java.security.Principal;
 import java.util.List;
@@ -39,6 +38,8 @@ public class ChatController {
     private final ChatParticipantService chatParticipantService;
     private final MessageService messageService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final UserProfileService userProfileService;
+    private final MediaStorageService mediaStorageService;
 
     /**
      * Отображает страницу со списком всех чатов текущего пользователя.
@@ -74,6 +75,14 @@ public class ChatController {
         }
 
         Chat chat = chatService.getChat(chatId);
+        User companion = chatService.getCompanion(chat, currentUser);
+
+        UsersProfile companionProfile = companion != null
+                ? userProfileService.findByUser(companion).orElse(null)
+                : null;
+
+        model.addAttribute("companion", companion);
+        model.addAttribute("companionProfile", companionProfile);
 
         model.addAttribute("selectedChat", chat);
         model.addAttribute("messages", messageService.getInitialMessages(chat.getId()));
@@ -122,7 +131,7 @@ public class ChatController {
         Chat chat = chatService.getChat(dto.getChatId());
 
         Message savedMessage = messageService.saveMessage(chat, sender, null, dto.getText());
-        MessageDTO response = savedMessage.toMessageDTO();
+        MessageDTO response = messageService.convertToDto(savedMessage);
 
         List<User> users = chatService.getChatParticipants(chat.getId());
 
@@ -187,6 +196,72 @@ public class ChatController {
 
         Long response =
                 chatService.createChat(request, userService.getCurrentUser());
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Загружает медиафайлы в чат и создаёт одно сообщение с вложениями.
+     *
+     * <p>Метод принимает список файлов и необязательную текстовую подпись.
+     * Каждый файл сохраняется на диск, после чего создаётся сообщение,
+     * связанное с этими медиафайлами. После сохранения сообщение рассылается
+     * всем участникам чата через WebSocket.</p>
+     *
+     * @param chatId идентификатор чата
+     * @param files список загружаемых файлов
+     * @param text текстовая подпись к медиа, может быть пустой
+     * @return HTTP-ответ с DTO созданного сообщения или текстом ошибки
+     */
+    @PostMapping("/chats/{chatId}/media")
+    @ResponseBody
+    @Transactional
+    public ResponseEntity<?> uploadChatMedia(@PathVariable Long chatId,
+                                             @RequestParam(value = "files", required = false) List<MultipartFile> files,
+                                             @RequestParam(value = "text", required = false) String text) {
+        User currentUser = userService.getCurrentUser();
+
+        if (currentUser == null) {
+            return ResponseEntity.status(401).body("Unauthorized");
+        }
+
+        boolean allowed = chatParticipantService.isParticipant(chatId, currentUser.getId());
+
+        if (!allowed) {
+            return ResponseEntity.status(403).body("You are not participant of this chat");
+        }
+
+        if ((text == null || text.isBlank()) && (files == null || files.isEmpty())) {
+            return ResponseEntity.badRequest().body("Сообщение не может быть пустым");
+        }
+
+        Chat chat = chatService.getChat(chatId);
+
+        List<MultipartFile> safeFiles = files == null ? List.of() : files;
+
+        List<String> mediaPaths = safeFiles.stream()
+                .map(file -> mediaStorageService.saveChatMedia(chatId, file))
+                .toList();
+
+        Message savedMessage = messageService.saveMediaMessage(
+                chat,
+                currentUser,
+                text,
+                mediaPaths,
+                safeFiles
+        );
+
+        MessageDTO response = savedMessage.toMessageDTO();
+
+        List<User> users = chatService.getChatParticipants(chat.getId());
+
+        for (User user : users) {
+            messagingTemplate.convertAndSendToUser(
+                    user.getEmail(),
+                    "/queue/chat/" + chat.getId(),
+                    response
+            );
+        }
 
         return ResponseEntity.ok(response);
     }

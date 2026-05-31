@@ -2,7 +2,7 @@
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>NauGram - Чаты</title>
+    <title th:text="#{main.page.title}">NauGram - Чаты</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -122,6 +122,14 @@
             font-size: 18px;
             flex-shrink: 0;
             margin-right: 12px;
+            overflow: hidden;
+        }
+
+        .chat-avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
         }
 
         .chat-info { flex: 1; overflow: hidden; }
@@ -315,6 +323,11 @@
             gap: 8px;
         }
 
+        .avatar-form {
+            display: flex;
+            justify-content: center;
+        }
+
         .avatar-big {
             width: 80px;
             height: 80px;
@@ -328,6 +341,22 @@
             font-weight: bold;
             position: relative;
             cursor: pointer;
+            overflow: hidden;
+        }
+
+        .avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .avatar-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
         }
 
         .avatar-edit-icon {
@@ -517,25 +546,60 @@
             </button>
         </div>
         <div class="panel-body">
-            <form action="/save-profile" method="POST">
-                <div class="avatar-editor">
-                    <div class="avatar-big">
-                        И
-                        <div class="avatar-edit-icon">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f5833d" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                        </div>
-                    </div>
-                    <div class="avatar-name"
-                         th:text="${profile != null && profile.realName != null && !profile.realName.isBlank() ? profile.realName : currentUser.username}">
-                        Ваше имя
-                    </div>
+            <div class="avatar-editor">
+                <form action="/profile/avatar"
+                      method="POST"
+                      enctype="multipart/form-data"
+                      class="avatar-form">
 
-                    <div class="avatar-email"
-                         th:text="${currentUser != null ? '@' + currentUser.username : '@username'}">
-                        @username
-                    </div>
+                    <label class="avatar-big" for="avatarInput">
+                        <img th:if="${profile != null
+                                     && profile.profileImagePath != null
+                                     && !profile.profileImagePath.isBlank()}"
+                             th:src="${profile.profileImagePath}"
+                             class="avatar-img"
+                             alt="Avatar">
+
+                        <span class="avatar-placeholder"
+                              th:if="${profile == null
+                                      || profile.profileImagePath == null
+                                      || profile.profileImagePath.isBlank()}"
+                              th:text="${currentUser != null && currentUser.username != null && !currentUser.username.isBlank()
+                                    ? #strings.substring(currentUser.username, 0, 1).toUpperCase()
+                                    : 'U'}">
+                            U
+                        </span>
+
+                        <div class="avatar-edit-icon">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f5833d" stroke-width="2.5">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                        </div>
+                    </label>
+
+                    <input id="avatarInput"
+                           type="file"
+                           name="avatar"
+                           accept="image/png,image/jpeg,image/webp"
+                           style="display: none;"
+                           onchange="this.form.submit()">
+                </form>
+
+                <div class="avatar-name"
+                     th:text="${profile != null && profile.realName != null && !profile.realName.isBlank()
+                        ? profile.realName
+                        : (currentUser != null ? currentUser.username : 'Пользователь')}">
+                    Ваше имя
                 </div>
 
+                <div class="avatar-email"
+                     th:text="${currentUser != null ? '@' + currentUser.username : '@username'}">
+                    @username
+                </div>
+            </div>
+
+            <form action="/save-profile" method="POST">
                 <div class="section-label" th:text="#{profile.main}">Основное</div>
 
                 <input type="text"
@@ -558,7 +622,7 @@
                 <input type="text"
                        name="username"
                        class="panel-input"
-                       placeholder="@username"
+                       th:placeholder="#{profile.username}"
                        th:value="${currentUser != null ? '@' + currentUser.username : ''}">
 
                 <div class="section-label" th:text="#{profile.about}">О себе</div>
@@ -579,14 +643,14 @@
     <!-- Хедер сайдбара -->
     <div class="sidebar-header">
         <div class="header-top">
-            <button class="icon-btn" id="settingsBtn" onclick="togglePanel('settings')" title="Настройки">
+            <button class="icon-btn" id="settingsBtn" onclick="togglePanel('settings')" th:title="#{settings.title}">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
             </button>
 
             <!-- NEW CHAT BUTTON -->
             <a href="/chats/create"
                class="icon-btn"
-               title="Создать чат">
+               th:title="#{chat.create.title}">
                 <svg width="22"
                      height="22"
                      viewBox="0 0 24 24"
@@ -600,7 +664,7 @@
                 </svg>
             </a>
 
-            <button class="icon-btn" id="profileBtn" onclick="togglePanel('profile')" title="Профиль">
+            <button class="icon-btn" id="profileBtn" onclick="togglePanel('profile')" th:title="#{profile.title}">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
             </button>
         </div>
@@ -629,7 +693,7 @@
                 <div class="chat-name">
                 <span th:text="${chat.chatName != null && !chat.chatName.isBlank()
                     ? chat.chatName
-                    : 'Чат #' + chat.id}">
+                    : #messages.msg('chat.fallbackPrefix') + ' #' + chat.id}">
                     Название чата
                 </span>
 
@@ -642,14 +706,16 @@
                 </div>
 
                 <div class="chat-last-msg">
-                <span th:text="${chat.chatType == 'direct' ? 'Личный чат' : 'Групповой чат'}">
+                <span th:text="${chat.chatType == 'direct' ? #messages.msg('chat.type.direct') : #messages.msg('chat.type.group')}">
                     Тип чата
                 </span>
                 </div>
             </div>
         </a>
 
-        <div th:if="${chats == null || #lists.isEmpty(chats)}" class="empty-chats">
+        <div th:if="${chats == null || #lists.isEmpty(chats)}"
+             class="empty-chats"
+             th:text="#{chat.empty}">
             У вас пока нет чатов
         </div>
 

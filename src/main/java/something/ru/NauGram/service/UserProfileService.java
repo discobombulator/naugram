@@ -107,6 +107,19 @@ public class UserProfileService {
         usersProfileRepository.save(profile);
     }
 
+    @Transactional
+    public void updateAvatar(User user, String avatarPath) {
+        UsersProfile profile = usersProfileRepository.findByUser(user)
+                .orElseGet(() -> {
+                    UsersProfile newProfile = new UsersProfile();
+                    newProfile.setUser(user);
+                    newProfile.setRealName(user.getUsername());
+                    return usersProfileRepository.save(newProfile);
+                });
+
+        profile.setProfileImagePath(avatarPath);
+        usersProfileRepository.save(profile);
+    }
     /**
      * Нормализует и проверяет тег пользователя.
      *
