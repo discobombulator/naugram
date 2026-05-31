@@ -9,4 +9,5 @@ public class ChatUpdateDTO {
     private Long chatId;
     private String lastMessage;
     private int unreadCount;
+    private String messageType;
 }

@@ -209,7 +209,8 @@ public class ChatController {
                             chat.getId(),
                             messageService.convertToDto(savedMessage).getText(),
                             chatLastReadService.getUnreadMessages(
-                                    chatParticipantService.getChatParticipant(chat, user))
+                                    chatParticipantService.getChatParticipant(chat, user)),
+                            savedMessage.getMessageType().toString()
                     )
             );
         } catch (IllegalArgumentException e) {

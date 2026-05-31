@@ -503,7 +503,10 @@
             text-decoration: none;
             color: inherit;
         }
-
+        .media-message-preview {
+            color: #74c0fc;
+            font-weight: 500;
+        }
         .empty-chats {
             padding: 24px 16px;
             text-align: center;
@@ -810,7 +813,11 @@
 <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js"></script>
 <script th:inline="javascript">
     const initialChatLastMessages = /*[[${initialChatLastMessages}]]*/ [];
-
+    const I18N = {
+        image: /*[[#{chat.lastMessage.image}]]*/ "Фото",
+        video: /*[[#{chat.lastMessage.video}]]*/ "Видео",
+        media: /*[[#{chat.lastMessage.media}]]*/ "Медиа"
+    };
     const socket = new SockJS('/ws');
 
     const stompClient =
@@ -860,6 +867,28 @@
         if (lastMessage) {
             lastMessage.textContent =
                 data.lastMessage || '';
+        }
+        if (data.messageType === "IMAGE") {
+            lastMessage.textContent = I18N.image;
+            lastMessage.classList.add("media-message-preview");
+        }
+
+        if (data.messageType === "VIDEO") {
+            lastMessage.textContent = I18N.video;
+            lastMessage.classList.add("media-message-preview");
+        }
+
+        if (data.messageType === "MIXED") {
+            lastMessage.textContent = I18N.media;
+            lastMessage.classList.add("media-message-preview");
+        }
+
+        if (
+            data.messageType !== "IMAGE" &&
+            data.messageType !== "VIDEO" &&
+            data.messageType !== "MIXED"
+        ) {
+            lastMessage.classList.remove("media-message-preview");
         }
 
         if (unreadBadge) {

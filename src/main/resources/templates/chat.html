@@ -747,7 +747,25 @@
             font-size: 14px;
             color: #aaa;
         }
+        .unread-divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 14px 0;
+            width: 100%;
+            color: #f5833d;
+            font-size: 13px;
+            font-weight: 700;
+            user-select: none;
+        }
 
+        .unread-divider::before,
+        .unread-divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: #f5833d33;
+        }
         .mini-profile-actions {
             display: flex;
             gap: 10px;
@@ -908,11 +926,7 @@
 
     <div class="chat-header-info">
         <div class="chat-title"
-             th:text="${companion != null && companion.username != null && !companion.username.isBlank()
-                ? '@' + companion.username
-                : (selectedChat.chatName != null && !selectedChat.chatName.isBlank()
-                    ? selectedChat.chatName
-                    : #messages.msg('chat.fallbackPrefix') + ' #' + selectedChat.id)}">
+             th:text="${selectedChat.chatName}">
             Название чата
         </div>
 
@@ -1080,6 +1094,7 @@
         videoUnsupported: /*[[#{chat.video.unsupported}]]*/ "Ваш браузер не поддерживает видео.",
         mediaSendFailed: /*[[#{chat.error.mediaSendFailed}]]*/ "Не удалось отправить медиа",
         profileLoadFailed: /*[[#{chat.error.profileLoadFailed}]]*/ "Не удалось загрузить профиль",
+        unreadMessages: /*[[#{chat.unread}]]*/ "Непрочитанные сообщения",
         defaultUser: /*[[#{profile.defaultUser}]]*/ "Пользователь",
         usernameFallback: /*[[#{profile.usernameFallback}]]*/ "@username",
         emptyValue: "—"
@@ -1089,6 +1104,7 @@
     let stompClient = null;
     let selectedMediaFiles = [];
     let currentMediaIndex = 0;
+    let unreadDividerInserted = false;
 
     document.addEventListener("DOMContentLoaded", function () {
         for (let message of initialMessages) {
@@ -1321,7 +1337,20 @@
                 </div>
             </div>
         `;
+        if (
+            currentUserId !== message.senderId &&
+            lastReadMessageId &&
+            !unreadDividerInserted &&
+            Number(message.id) > Number(lastReadMessageId)
+        ) {
+            const divider = document.createElement("div");
+            divider.className = "unread-divider";
+            divider.textContent = I18N.unreadMessages;
 
+            container.appendChild(divider);
+
+            unreadDividerInserted = true;
+        }
         container.appendChild(row);
         container.scrollTop = container.scrollHeight;
     }

@@ -76,7 +76,8 @@ public class MainController {
                         new ChatUpdateDTO(
                                 chat.getId(),
                                 chatLastMessage.getMessageText(),
-                                chatLastReadService.getUnreadMessages(cp)
+                                chatLastReadService.getUnreadMessages(cp),
+                                chatLastMessage.getMessageType().toString()
                         )
                 );
             } catch (IllegalArgumentException e) {
