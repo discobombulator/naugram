@@ -4,11 +4,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import something.ru.NauGram.dto.MessageDTO;
-import something.ru.NauGram.model.Chat;
-import something.ru.NauGram.model.Message;
-import something.ru.NauGram.model.MessageType;
-import something.ru.NauGram.model.User;
+import something.ru.NauGram.model.*;
+import something.ru.NauGram.repository.MessageMediaRepository;
 import something.ru.NauGram.repository.MessageRepository;
 
 import java.util.List;
@@ -23,6 +22,8 @@ public class MessageService {
     /** Количество последних сообщений, возвращаемых при начальной загрузке чата */
     private final int MESSAGE_NUMBER = 50;
 
+    private final MessageMediaRepository messageMediaRepository;
+
     private final MessageRepository messageRepository;
 
     /**
@@ -32,7 +33,8 @@ public class MessageService {
      * @param messageRepository репозиторий для работы с сущностью {@link Message}
      */
     @Autowired
-    public MessageService(MessageRepository messageRepository) {
+    public MessageService(MessageMediaRepository messageMediaRepository, MessageRepository messageRepository) {
+        this.messageMediaRepository = messageMediaRepository;
         this.messageRepository = messageRepository;
     }
 
@@ -104,5 +106,64 @@ public class MessageService {
         message.setMediaOriginalName(originalName);
 
         return messageRepository.save(message);
+    }
+
+    @Transactional
+    public Message saveMediaMessage(Chat chat,
+                                    User sender,
+                                    String text,
+                                    List<String> mediaPaths,
+                                    List<MultipartFile> files) {
+        if ((text == null || text.isBlank()) && (files == null || files.isEmpty())) {
+            throw new RuntimeException("Сообщение не может быть пустым");
+        }
+
+        Message message = new Message();
+        message.setChat(chat);
+        message.setSender(sender);
+        message.setMessageText(text != null ? text.trim() : "");
+
+        boolean hasPhoto = files.stream()
+                .anyMatch(file -> file.getContentType() != null && file.getContentType().startsWith("image/"));
+
+        boolean hasVideo = files.stream()
+                .anyMatch(file -> file.getContentType() != null && file.getContentType().startsWith("video/"));
+
+        if (hasPhoto && hasVideo) {
+            message.setMessageType(MessageType.MIXED);
+        } else if (hasPhoto) {
+            message.setMessageType(MessageType.IMAGE);
+        } else if (hasVideo) {
+            message.setMessageType(MessageType.VIDEO);
+        } else {
+            message.setMessageType(MessageType.TEXT);
+        }
+
+        Message savedMessage = messageRepository.save(message);
+
+        for (int i = 0; i < files.size(); i++) {
+            MultipartFile file = files.get(i);
+            String mediaPath = mediaPaths.get(i);
+
+            MessageMedia media = new MessageMedia();
+            media.setMessage(savedMessage);
+            media.setMediaPath(mediaPath);
+            media.setMediaOrder(i);
+
+            String contentType = file.getContentType();
+
+            if (contentType != null && contentType.startsWith("image/")) {
+                media.setMediaType("photo");
+            } else if (contentType != null && contentType.startsWith("video/")) {
+                media.setMediaType("video");
+            } else {
+                media.setMediaType("document");
+            }
+
+            messageMediaRepository.save(media);
+            savedMessage.getMediaFiles().add(media);
+        }
+
+        return savedMessage;
     }
 }

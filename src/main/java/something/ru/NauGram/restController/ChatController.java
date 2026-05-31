@@ -204,7 +204,8 @@ public class ChatController {
     @ResponseBody
     @Transactional
     public ResponseEntity<?> uploadChatMedia(@PathVariable Long chatId,
-                                             @RequestParam("file") MultipartFile file) {
+                                             @RequestParam(value = "files", required = false) List<MultipartFile> files,
+                                             @RequestParam(value = "text", required = false) String text) {
         User currentUser = userService.getCurrentUser();
 
         if (currentUser == null) {
@@ -217,16 +218,24 @@ public class ChatController {
             return ResponseEntity.status(403).body("You are not participant of this chat");
         }
 
+        if ((text == null || text.isBlank()) && (files == null || files.isEmpty())) {
+            return ResponseEntity.badRequest().body("Сообщение не может быть пустым");
+        }
+
         Chat chat = chatService.getChat(chatId);
 
-        String mediaUrl = mediaStorageService.saveChatMedia(chatId, file);
+        List<MultipartFile> safeFiles = files == null ? List.of() : files;
+
+        List<String> mediaPaths = safeFiles.stream()
+                .map(file -> mediaStorageService.saveChatMedia(chatId, file))
+                .toList();
 
         Message savedMessage = messageService.saveMediaMessage(
                 chat,
                 currentUser,
-                mediaUrl,
-                file.getContentType(),
-                file.getOriginalFilename()
+                text,
+                mediaPaths,
+                safeFiles
         );
 
         MessageDTO response = savedMessage.toMessageDTO();

@@ -111,7 +111,7 @@
         .messages-container {
             flex: 1;
             overflow-y: auto;
-            padding: 28px 12%;
+            padding: 28px 7%;
             display: flex;
             flex-direction: column;
             gap: 10px;
@@ -137,6 +137,20 @@
 
         .message-row.sent {
             justify-content: flex-end;
+        }
+
+        .message-wrapper {
+            display: flex;
+            flex-direction: column;
+            max-width: 460px;
+        }
+
+        .message-wrapper.mine {
+            align-items: flex-end;
+        }
+
+        .message-wrapper.other {
+            align-items: flex-start;
         }
 
         .message-bubble {
@@ -180,10 +194,32 @@
             text-align: right;
         }
 
+        .media-meta {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-top: 4px;
+            padding: 0 4px;
+            font-size: 11px;
+            color: #aaa;
+        }
+
+        .message-wrapper.mine .media-meta {
+            justify-content: flex-end;
+        }
+
+        .message-wrapper.other .media-meta {
+            justify-content: flex-start;
+        }
+
+        .message-wrapper.mine .media-meta span:first-child {
+            display: none;
+        }
+
         .chat-input-area {
             background: white;
             border-top: 1px solid #eee;
-            padding: 14px 12%;
+            padding: 14px 7%;
             display: flex;
             gap: 10px;
             flex-shrink: 0;
@@ -223,12 +259,6 @@
             background: #d96d2e;
         }
 
-        .empty-chat {
-            margin: auto;
-            color: #aaa;
-            text-align: center;
-            font-size: 15px;
-        }
         .media-btn {
             width: 46px;
             min-width: 46px;
@@ -255,9 +285,16 @@
             display: block;
         }
 
+        .empty-chat {
+            margin: auto;
+            color: #aaa;
+            text-align: center;
+            font-size: 15px;
+        }
+
         .message-bubble.media-bubble {
             padding: 6px;
-            max-width: 300px;
+            max-width: 380px;
             background: transparent;
             box-shadow: none;
         }
@@ -271,34 +308,320 @@
             border: none;
         }
 
-        .message-media-img {
+        .message-media-grid {
+            display: grid;
+            gap: 4px;
+            overflow: hidden;
+            border-radius: 14px;
+            max-width: 360px;
+        }
+
+        .message-media-grid.media-count-1 {
             display: block;
+        }
+
+        .message-media-grid.media-count-2 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .message-media-grid.media-count-3,
+        .message-media-grid.media-count-4 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .message-media-grid.media-count-5,
+        .message-media-grid.media-count-6 {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .message-media-img,
+        .message-media-video {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            display: block;
+            background: black;
+            cursor: pointer;
+        }
+
+        .message-media-grid.media-count-1 .message-media-img,
+        .message-media-grid.media-count-1 .message-media-video {
             width: auto;
+            max-width: 340px;
+            max-height: 300px;
             height: auto;
-            max-width: 280px;
-            max-height: 280px;
             object-fit: contain;
             border-radius: 14px;
             box-shadow: 0 4px 14px rgba(0, 0, 0, 0.10);
         }
 
-        .message-media-video {
-            display: block;
-            width: auto;
-            height: auto;
-            max-width: 320px;
-            max-height: 280px;
-            border-radius: 14px;
-            background: black;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.10);
+        .media-message-text {
+            margin-top: 7px;
+            padding: 8px 10px;
+            background: white;
+            color: #222;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
         }
 
-        .media-caption {
-            margin-top: 6px;
-            padding: 0 4px 2px;
-            font-size: 12px;
-            opacity: 0.75;
-            word-break: break-word;
+        .message-row.sent .media-message-text {
+            background: #f5833d;
+            color: white;
+        }
+
+        .media-editor-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(247, 249, 251, 0.72);
+            backdrop-filter: blur(4px);
+            z-index: 3000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .media-editor-overlay.open {
+            display: flex;
+        }
+
+        .media-editor-modal {
+            width: 440px;
+            max-width: calc(100vw - 24px);
+            background: white;
+            color: #333;
+            border-radius: 20px;
+            border: 1px solid #f5833d22;
+            box-shadow: 0 14px 40px rgba(245, 131, 61, 0.16);
+            padding: 18px;
+        }
+
+        .media-editor-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 14px;
+        }
+
+        .media-editor-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #f5833d;
+        }
+
+        .media-editor-preview-wrap {
+            position: relative;
+            width: 100%;
+            height: 270px;
+            background: #f7f9fb;
+            border: 2px solid #f5833d22;
+            border-radius: 18px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .media-editor-preview {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .media-editor-preview img,
+        .media-editor-preview video {
+            max-width: 100%;
+            max-height: 270px;
+            object-fit: contain;
+            display: block;
+        }
+
+        .media-remove-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 30px;
+            height: 30px;
+            border: none;
+            background: white;
+            color: #f5833d;
+            font-size: 22px;
+            line-height: 28px;
+            cursor: pointer;
+            border-radius: 50%;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        .media-remove-btn:hover {
+            background: #fff4ed;
+            transform: scale(1.04);
+        }
+
+        .media-nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 34px;
+            height: 48px;
+            border: none;
+            background: rgba(255, 255, 255, 0.88);
+            color: #f5833d;
+            font-size: 34px;
+            cursor: pointer;
+            z-index: 2;
+            border-radius: 12px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.10);
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        .media-nav-btn:hover {
+            background: #fff4ed;
+        }
+
+        .media-nav-prev {
+            left: 10px;
+        }
+
+        .media-nav-next {
+            right: 10px;
+        }
+
+        .media-editor-hint {
+            color: #aaa;
+            font-size: 13px;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .document-checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #333;
+            font-size: 14px;
+            margin-top: 16px;
+            cursor: pointer;
+        }
+
+        .document-checkbox-row input {
+            width: 18px;
+            height: 18px;
+            accent-color: #f5833d;
+        }
+
+        .caption-label {
+            display: block;
+            color: #f5833d;
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 14px;
+            margin-bottom: 6px;
+        }
+
+        .caption-input-wrap {
+            display: flex;
+            align-items: center;
+        }
+
+        .caption-input {
+            width: 100%;
+            height: 46px;
+            border: 2px solid #f5833d33;
+            border-radius: 14px;
+            outline: none;
+            background: white;
+            color: #333;
+            padding: 0 14px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        .caption-input:focus {
+            border-color: #f5833d;
+        }
+
+        .media-thumbs {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+
+        .media-thumb {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid transparent;
+            background: #f7f9fb;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+
+        .media-thumb:hover {
+            transform: translateY(-1px);
+        }
+
+        .media-thumb.active {
+            border-color: #f5833d;
+        }
+
+        .media-thumb img,
+        .media-thumb video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .media-editor-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 16px;
+        }
+
+        .media-action-right {
+            display: flex;
+            gap: 10px;
+        }
+
+        .media-action-btn {
+            height: 40px;
+            border: none;
+            border-radius: 12px;
+            padding: 0 14px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        .media-action-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .media-action-btn.primary {
+            background: #f5833d;
+            color: white;
+        }
+
+        .media-action-btn.primary:hover {
+            background: #d96d2e;
+        }
+
+        .media-action-btn.secondary {
+            background: #fff4ed;
+            color: #f5833d;
+        }
+
+        .media-action-btn.secondary:hover {
+            background: #f5833d22;
         }
 
         @media (max-width: 768px) {
@@ -333,14 +656,45 @@
                 max-width: 74vw;
             }
 
-            .message-media-img {
+            .message-media-grid {
+                max-width: 72vw;
+            }
+
+            .message-media-grid.media-count-1 .message-media-img,
+            .message-media-grid.media-count-1 .message-media-video {
                 max-width: 72vw;
                 max-height: 240px;
             }
 
+            .message-media-img,
             .message-media-video {
-                max-width: 72vw;
+                height: 120px;
+            }
+
+            .media-editor-modal {
+                width: calc(100vw - 18px);
+                padding: 14px;
+            }
+
+            .media-editor-preview-wrap {
+                height: 240px;
+            }
+
+            .media-editor-preview img,
+            .media-editor-preview video {
                 max-height: 240px;
+            }
+
+            .media-editor-actions {
+                gap: 8px;
+            }
+
+            .media-action-right {
+                gap: 8px;
+            }
+
+            .media-action-btn {
+                padding: 0 10px;
             }
         }
     </style>
@@ -404,8 +758,9 @@
             <input id="mediaInput"
                    type="file"
                    accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm"
+                   multiple
                    style="display: none;"
-                   onchange="uploadMedia()">
+                   onchange="openMediaEditor()">
 
             <button class="media-btn"
                     onclick="document.getElementById('mediaInput').click()"
@@ -434,6 +789,71 @@
     </div>
 </main>
 
+<div id="mediaEditorOverlay" class="media-editor-overlay">
+    <div class="media-editor-modal">
+
+        <div class="media-editor-header">
+            <div class="media-editor-title">Send media</div>
+        </div>
+
+        <div class="media-editor-preview-wrap">
+            <button class="media-nav-btn media-nav-prev"
+                    type="button"
+                    onclick="showPreviousMedia()">
+                ‹
+            </button>
+
+            <div id="mediaEditorPreview" class="media-editor-preview"></div>
+
+            <button class="media-nav-btn media-nav-next"
+                    type="button"
+                    onclick="showNextMedia()">
+                ›
+            </button>
+
+            <button class="media-remove-btn"
+                    type="button"
+                    onclick="removeCurrentMedia()">
+                ×
+            </button>
+        </div>
+
+        <label class="caption-label" for="mediaCaptionInput">Caption</label>
+
+        <div class="caption-input-wrap">
+            <input id="mediaCaptionInput"
+                   class="caption-input"
+                   type="text"
+                   autocomplete="off"
+                   placeholder="Добавьте подпись...">
+        </div>
+
+        <div id="mediaThumbs" class="media-thumbs"></div>
+
+        <div class="media-editor-actions">
+            <button type="button"
+                    class="media-action-btn secondary"
+                    onclick="addMoreMedia()">
+                Add
+            </button>
+
+            <div class="media-action-right">
+                <button type="button"
+                        class="media-action-btn secondary"
+                        onclick="closeMediaEditor()">
+                    Cancel
+                </button>
+
+                <button type="button"
+                        class="media-action-btn primary"
+                        onclick="sendMediaMessage()">
+                    Send
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 
@@ -443,6 +863,8 @@
     const currentUserId = /*[[${currentUserId}]]*/ null;
 
     let stompClient = null;
+    let selectedMediaFiles = [];
+    let currentMediaIndex = 0;
 
     document.addEventListener("DOMContentLoaded", function () {
         for (let message of initialMessages) {
@@ -458,6 +880,17 @@
                 if (event.key === "Enter") {
                     event.preventDefault();
                     sendMessage();
+                }
+            });
+        }
+
+        const captionInput = document.getElementById("mediaCaptionInput");
+
+        if (captionInput) {
+            captionInput.addEventListener("keypress", function (event) {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    sendMediaMessage();
                 }
             });
         }
@@ -535,17 +968,29 @@
         const messageContent = buildMessageContent(message);
 
         const type = message.messageType || "TEXT";
-        const bubbleClass = type === "IMAGE" || type === "VIDEO"
+        const mediaFiles = message.mediaFiles || [];
+        const isMedia = type === "IMAGE" || type === "VIDEO" || type === "MIXED" || mediaFiles.length > 0 || message.mediaUrl;
+
+        const bubbleClass = isMedia
             ? "message-bubble media-bubble"
             : "message-bubble";
 
         row.innerHTML = `
-    <div class="${bubbleClass}">
-        ${!isMine ? `<div class="message-sender">${escapeHtml(message.sender)}</div>` : ""}
-        ${messageContent}
-        <div class="message-time">${time}</div>
-    </div>
-`;
+            <div class="message-wrapper ${isMine ? "mine" : "other"}">
+                <div class="${bubbleClass}">
+                    ${!isMedia && !isMine ? `<div class="message-sender">${escapeHtml(message.sender)}</div>` : ""}
+                    ${messageContent}
+                    ${!isMedia ? `<div class="message-time">${time}</div>` : ""}
+                </div>
+
+                ${isMedia ? `
+                    <div class="media-meta">
+                        <span>${escapeHtml(message.sender || "")}</span>
+                        <span>${time}</span>
+                    </div>
+                ` : ""}
+            </div>
+        `;
 
         container.appendChild(row);
         container.scrollTop = container.scrollHeight;
@@ -553,27 +998,264 @@
 
     function buildMessageContent(message) {
         const type = message.messageType || "TEXT";
+        const mediaFiles = message.mediaFiles || [];
 
-        if (type === "IMAGE") {
+        if ((type === "IMAGE" || type === "VIDEO" || type === "MIXED" || mediaFiles.length > 0) && mediaFiles.length > 0) {
+            const mediaHtml = mediaFiles.map(media => {
+                if (media.mediaType === "photo") {
+                    return `
+                        <img class="message-media-img"
+                             src="${escapeAttribute(media.mediaPath)}"
+                             alt="image"
+                             loading="lazy"
+                             onclick="openMediaViewer('${escapeJs(media.mediaPath)}', 'image')">
+                    `;
+                }
+
+                if (media.mediaType === "video") {
+                    return `
+                        <video class="message-media-video"
+                               controls
+                               ondblclick="openMediaViewer('${escapeJs(media.mediaPath)}', 'video')">
+                            <source src="${escapeAttribute(media.mediaPath)}" type="video/mp4">
+                            Ваш браузер не поддерживает видео.
+                        </video>
+                    `;
+                }
+
+                return "";
+            }).join("");
+
             return `
-            <img class="message-media-img"
-                 src="${escapeAttribute(message.mediaUrl)}"
-                 alt="${escapeAttribute(message.mediaOriginalName || 'image')}">
-        `;
+                <div class="message-media-grid media-count-${Math.min(mediaFiles.length, 6)}">
+                    ${mediaHtml}
+                </div>
+                ${message.text ? `<div class="message-text media-message-text">${escapeHtml(message.text)}</div>` : ""}
+            `;
         }
 
-        if (type === "VIDEO") {
+        if (type === "IMAGE" && message.mediaUrl) {
             return `
-            <video class="message-media-video" controls>
-                <source src="${escapeAttribute(message.mediaUrl)}"
-                        type="${escapeAttribute(message.mediaContentType || 'video/mp4')}">
-                Ваш браузер не поддерживает видео.
-            </video>
-            ${message.mediaOriginalName ? `<div class="media-caption">${escapeHtml(message.mediaOriginalName)}</div>` : ""}
-        `;
+                <img class="message-media-img"
+                     src="${escapeAttribute(message.mediaUrl)}"
+                     alt="${escapeAttribute(message.mediaOriginalName || 'image')}"
+                     loading="lazy"
+                     onclick="openMediaViewer('${escapeJs(message.mediaUrl)}', 'image')">
+            `;
+        }
+
+        if (type === "VIDEO" && message.mediaUrl) {
+            return `
+                <video class="message-media-video"
+                       controls
+                       ondblclick="openMediaViewer('${escapeJs(message.mediaUrl)}', 'video')">
+                    <source src="${escapeAttribute(message.mediaUrl)}"
+                            type="${escapeAttribute(message.mediaContentType || 'video/mp4')}">
+                    Ваш браузер не поддерживает видео.
+                </video>
+            `;
         }
 
         return `<div class="message-text">${escapeHtml(message.text)}</div>`;
+    }
+
+    function openMediaEditor() {
+        const input = document.getElementById("mediaInput");
+
+        if (!input.files || input.files.length === 0) {
+            return;
+        }
+
+        const newFiles = Array.from(input.files);
+
+        if (document.getElementById("mediaEditorOverlay").classList.contains("open")) {
+            selectedMediaFiles = selectedMediaFiles.concat(newFiles);
+        } else {
+            selectedMediaFiles = newFiles;
+            currentMediaIndex = 0;
+        }
+
+        input.value = "";
+
+        renderMediaEditor();
+
+        document.getElementById("mediaEditorOverlay").classList.add("open");
+        document.getElementById("mediaCaptionInput").focus();
+    }
+
+    function closeMediaEditor() {
+        selectedMediaFiles = [];
+        currentMediaIndex = 0;
+
+        document.getElementById("mediaInput").value = "";
+        document.getElementById("mediaCaptionInput").value = "";
+        document.getElementById("mediaEditorPreview").innerHTML = "";
+        document.getElementById("mediaThumbs").innerHTML = "";
+        document.getElementById("mediaEditorOverlay").classList.remove("open");
+    }
+
+    function renderMediaEditor() {
+        renderCurrentMediaPreview();
+        renderMediaThumbs();
+        updateMediaNavigationButtons();
+    }
+
+    function renderCurrentMediaPreview() {
+        const preview = document.getElementById("mediaEditorPreview");
+        preview.innerHTML = "";
+
+        if (selectedMediaFiles.length === 0) {
+            closeMediaEditor();
+            return;
+        }
+
+        const file = selectedMediaFiles[currentMediaIndex];
+        const url = URL.createObjectURL(file);
+
+        if (file.type.startsWith("image/")) {
+            const img = document.createElement("img");
+            img.src = url;
+            img.alt = file.name;
+            preview.appendChild(img);
+        } else if (file.type.startsWith("video/")) {
+            const video = document.createElement("video");
+            video.src = url;
+            video.controls = true;
+            video.muted = true;
+            preview.appendChild(video);
+        }
+    }
+
+    function renderMediaThumbs() {
+        const thumbs = document.getElementById("mediaThumbs");
+        thumbs.innerHTML = "";
+
+        if (selectedMediaFiles.length <= 1) {
+            return;
+        }
+
+        selectedMediaFiles.forEach((file, index) => {
+            const thumb = document.createElement("div");
+            thumb.className = "media-thumb " + (index === currentMediaIndex ? "active" : "");
+            thumb.onclick = function () {
+                currentMediaIndex = index;
+                renderMediaEditor();
+            };
+
+            const url = URL.createObjectURL(file);
+
+            if (file.type.startsWith("image/")) {
+                thumb.innerHTML = `<img src="${escapeAttribute(url)}" alt="">`;
+            } else if (file.type.startsWith("video/")) {
+                thumb.innerHTML = `<video src="${escapeAttribute(url)}" muted></video>`;
+            }
+
+            thumbs.appendChild(thumb);
+        });
+    }
+
+    function updateMediaNavigationButtons() {
+        const prev = document.querySelector(".media-nav-prev");
+        const next = document.querySelector(".media-nav-next");
+
+        const show = selectedMediaFiles.length > 1;
+
+        prev.style.display = show ? "block" : "none";
+        next.style.display = show ? "block" : "none";
+    }
+
+    function showPreviousMedia() {
+        if (selectedMediaFiles.length <= 1) {
+            return;
+        }
+
+        currentMediaIndex =
+            (currentMediaIndex - 1 + selectedMediaFiles.length) % selectedMediaFiles.length;
+
+        renderMediaEditor();
+    }
+
+    function showNextMedia() {
+        if (selectedMediaFiles.length <= 1) {
+            return;
+        }
+
+        currentMediaIndex =
+            (currentMediaIndex + 1) % selectedMediaFiles.length;
+
+        renderMediaEditor();
+    }
+
+    function removeCurrentMedia() {
+        if (selectedMediaFiles.length === 0) {
+            return;
+        }
+
+        selectedMediaFiles.splice(currentMediaIndex, 1);
+
+        if (selectedMediaFiles.length === 0) {
+            closeMediaEditor();
+            return;
+        }
+
+        if (currentMediaIndex >= selectedMediaFiles.length) {
+            currentMediaIndex = selectedMediaFiles.length - 1;
+        }
+
+        renderMediaEditor();
+    }
+
+    function addMoreMedia() {
+        document.getElementById("mediaInput").click();
+    }
+
+    function sendMediaMessage() {
+        if (currentChatId === null) {
+            return;
+        }
+
+        if (selectedMediaFiles.length === 0) {
+            return;
+        }
+
+        const caption = document.getElementById("mediaCaptionInput").value.trim();
+
+        const formData = new FormData();
+
+        selectedMediaFiles.forEach(file => {
+            formData.append("files", file);
+        });
+
+        formData.append("text", caption);
+
+        fetch("/chats/" + currentChatId + "/media", {
+            method: "POST",
+            body: formData
+        })
+            .then(async response => {
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(errorText || "Не удалось отправить медиа");
+                }
+
+                return response.json();
+            })
+            .then(() => {
+                closeMediaEditor();
+            })
+            .catch(error => {
+                console.error(error);
+                alert(error.message);
+            });
+    }
+
+    function openMediaViewer(url, type) {
+        const back = "/chats/" + currentChatId;
+
+        window.location.href =
+            "/media-viewer?url=" + encodeURIComponent(url)
+            + "&type=" + encodeURIComponent(type)
+            + "&back=" + encodeURIComponent(back);
     }
 
     function escapeAttribute(value) {
@@ -601,47 +1283,24 @@
             .replaceAll("'", "&#039;");
     }
 
+    function escapeJs(value) {
+        if (value === null || value === undefined) {
+            return "";
+        }
+
+        return String(value)
+            .replaceAll("\\", "\\\\")
+            .replaceAll("'", "\\'")
+            .replaceAll('"', '\\"')
+            .replaceAll("\n", "\\n")
+            .replaceAll("\r", "\\r");
+    }
+
     window.addEventListener("beforeunload", function () {
         if (stompClient !== null) {
             stompClient.disconnect();
         }
     });
-
-    function uploadMedia() {
-        if (currentChatId === null) {
-            return;
-        }
-
-        const input = document.getElementById("mediaInput");
-        const file = input.files[0];
-
-        if (!file) {
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append("file", file);
-
-        fetch("/chats/" + currentChatId + "/media", {
-            method: "POST",
-            body: formData
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("Не удалось загрузить файл");
-                }
-
-                return response.json();
-            })
-            .then(() => {
-                input.value = "";
-            })
-            .catch(error => {
-                console.error(error);
-                alert(error.message);
-                input.value = "";
-            });
-    }
 </script>
 
 </body>

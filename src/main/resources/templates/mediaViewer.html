@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>NauGram - Media</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            height: 100vh;
+            background: #111;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .viewer-header {
+            height: 64px;
+            background: rgba(0, 0, 0, 0.55);
+            display: flex;
+            align-items: center;
+            padding: 0 18px;
+            flex-shrink: 0;
+        }
+
+        .back-btn {
+            width: 42px;
+            height: 42px;
+            border: none;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.12);
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(-2px);
+        }
+
+        .viewer-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+            overflow: hidden;
+        }
+
+        .viewer-img {
+            max-width: 96vw;
+            max-height: calc(100vh - 100px);
+            object-fit: contain;
+            border-radius: 12px;
+        }
+
+        .viewer-video {
+            max-width: 96vw;
+            max-height: calc(100vh - 100px);
+            background: black;
+            border-radius: 12px;
+        }
+    </style>
+</head>
+
+<body>
+
+<header class="viewer-header">
+    <button class="back-btn"
+            type="button"
+            th:onclick="|window.location.href='${back}'|">
+        ←
+    </button>
+</header>
+
+<main class="viewer-content">
+    <img th:if="${type == 'image'}"
+         class="viewer-img"
+         th:src="${url}"
+         alt="media">
+
+    <video th:if="${type == 'video'}"
+           class="viewer-video"
+           controls
+           autoplay>
+        <source th:src="${url}">
+        Ваш браузер не поддерживает видео.
+    </video>
+</main>
+
+</body>
+</html>

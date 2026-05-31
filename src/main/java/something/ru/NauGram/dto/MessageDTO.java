@@ -3,6 +3,8 @@ package something.ru.NauGram.dto;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 /**
  * DTO для передачи данных сообщения между сервером и клиентом.
  *
@@ -23,4 +25,6 @@ public class MessageDTO {
     private String mediaUrl;
     private String mediaContentType;
     private String mediaOriginalName;
+
+    private List<MessageMediaDTO> mediaFiles;
 }
